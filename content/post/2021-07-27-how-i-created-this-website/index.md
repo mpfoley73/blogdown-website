@@ -38,7 +38,7 @@ Let's go!
 
 If you haven't done so already, create an account at github.com and install the desktop application on your computer. From the GitHub Desktop application, create a new repository. My repo is named "blogdown-website".
 
-![GitHub Desktop dialog box for Creating a new respository](./create-repo-dialog.png "How I created my web site GitHub repo.")
+![GitHub Desktop dialog box for Creating a new respository](images/create-repo-dialog.png "How I created my web site GitHub repo.")
 
 I originally built my website first (step 2). I realized when I tried to host the website with Netify (step 3) that my website files belong in a repo. It shouldn't have been a big deal to move my files into a repo, but it took me a couple hours to undo the mess I made. GitHub mystifies me. My advice: *create your repo first.*
 
@@ -54,11 +54,11 @@ Create a **Website using blogdown** project in your new repo by navigating to Fi
 
 Creating a website project creates a sample website complete with 3 sample blog posts (./content/post), and an About page (./content/about.md). You can preview your new web site locally in the Viewer tab of the navigation pane by by selecting *Serve Site* from the Addins menu.
 
-![Addins Menu](./addins-menu.png "Serve Site in the Addins menu")
+![Addins Menu](images/addins-menu.png "Serve Site in the Addins menu")
 
 You can even see it in a web browswer by selecting *Show in new window* from the View tab.
 
-![Show in new window](./view-in-browser.png "Show Site in web browser")
+![Show in new window](images/view-in-browser.png "Show Site in web browser")
 
 Great, now you have a web site. It's basically the "hello world" of web sites, but huge progress. Check in your code on GitHub and push to origin.
 
@@ -72,12 +72,28 @@ Got to [https://www.netlify.com](https://www.netlify.com) and click "Sign up". C
 
 This will open a wizard to connect Netify to your GitHub repository and deploy your site. 
 
-Whenever you push your changes up to origin, Netify will be able to access them. Netify will build your web pages by compiling the markdown documents to html.
+Whenever you push your changes up to origin, Netify will recognize it, pull them to its server, and render the .md file into HTML. 
 
 Now you officially have a web site for other people to see. Time to personalize it so the world doesn't see your crummy template, but rather, your own stuff.
 
 ## 4. Personalize Your Website
 
+There are a few things you want to do right away to make your web site *your* website. Your header has an "Li" (lithium theme) icon in the top left of the header. Plus, the GitHub and Twitter links are not yours. 
 
+![Lithium Header](images/li-header.png)
+
+These are easy fixes. From RStudio, open your /config.yaml file. There you will find the addresses for your GitHub and Twitter. You can also change your web site title. 
+
+The "Li" icon is actuall a png file named "logo.png". You can specify a different file name, or overwrite the file. It is located at /themes/hugo-lithium/static/images. I made own logo, similar to the defaul, but with my own initials.
+
+Commit your changes back to the origin remote. Netify will update your website automatically.
 
 ## 5. Write Your First Post
+
+I created this post by going to the Addins menu and selecting *New Post*.  I built it with the Markdown style, but Yihui explains that there are few advantages to using markdown. For future posts I will use RMarkdown.
+
+![New blogdown post](images/new-post.png)
+
+## That's It!
+
+That's it. Now it's time to fill the site with interesting content!
