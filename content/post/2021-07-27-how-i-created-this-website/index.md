@@ -6,7 +6,7 @@ slug: how-i-created-this-website
 categories:
   - Website
 tags:
-  - netify
+  - netlify
   - blogdown
 ---
 
@@ -14,7 +14,7 @@ I have been listening to Emily Robinson and Jacqueline Nolis's <u>Build a Career
 
 ## What You'll Need
 
-You won't need much. I read Yihui Xie's [blogdown: Creating Websites with R Markdown](https://bookdown.org/yihui/blogdown/) and followed along to create this site and publish it to the Netify web hosting service. The book is not long; you can reasonably expect to do the same in about four hours. What might set you back is the occasional false start and misunderstanding. This post should help you avoid some of that.
+You won't need much. I read Yihui Xie's [blogdown: Creating Websites with R Markdown](https://bookdown.org/yihui/blogdown/) and followed along to create this site and publish it to the Netlify web hosting service. The book is not long; you can reasonably expect to do the same in about four hours. What might set you back is the occasional false start and misunderstanding. This post should help you avoid some of that.
 
 You will need a [GitHub](https://github.com/) account. I don't cover that here, so if you don't have any experience with GitHub, take a step back and get your (free) account and learn how to use it.
 
@@ -26,7 +26,7 @@ Here's what you want to do.
 
 1. Create a new repo on GitHub for our website files.
 2. Create a website with **blogdown** in RStudio.
-3. Host the website on Netify.
+3. Host the website on Netlify.
 4. Personalize your website.
 5. Start posting!
 
@@ -40,7 +40,7 @@ If you haven't done so already, create an account at github.com and install the 
 
 ![GitHub Desktop dialog box for Creating a new respository](images/create-repo-dialog.png "How I created my web site GitHub repo.")
 
-I originally built my website first (step 2). I realized when I tried to host the website with Netify (step 3) that my website files belong in a repo. It shouldn't have been a big deal to move my files into a repo, but it took me a couple hours to undo the mess I made. GitHub mystifies me. My advice: *create your repo first.*
+I originally built my website first (step 2). I realized when I tried to host the website with Netlify (step 3) that my website files belong in a repo. It shouldn't have been a big deal to move my files into a repo, but it took me a couple hours to undo the mess I made. GitHub mystifies me. My advice: *create your repo first.*
 
 ## 2. Create Your Website
 
@@ -62,17 +62,17 @@ You can even see it in a web browswer by selecting *Show in new window* from the
 
 Great, now you have a web site. It's basically the "hello world" of web sites, but huge progress. Check in your code on GitHub and push to origin.
 
-## 3. Create a Netify Account
+## 3. Create a Netlify Account
 
-**blogdown** creates the web pages, but you need to host them somewhere. Yihui shows you how to work with several web hosting services, but recommends Netify. It has free plans, and you can integrate it with GitHub to automatically update your web site when you commit changes to your main branch.
+**blogdown** creates the web pages, but you need to host them somewhere. Yihui shows you how to work with several web hosting services, but recommends Netlify. It has free plans, and you can integrate it with GitHub to automatically update your web site when you commit changes to your main branch.
 
-Got to [https://www.netlify.com](https://www.netlify.com) and click "Sign up". Choose the free start plan. Netify asks you to create a team. I called my team "Data Analytics". Then from the team page, click "New site from Git".
+Got to [https://www.netlify.com](https://www.netlify.com) and click "Sign up". Choose the free start plan. Netlify asks you to create a team. I called my team "Data Analytics". Then from the team page, click "New site from Git".
 
-![Create a Netify site by clicking New site from Git](images/new-site-from-git.png)
+![Create a Netlify site by clicking New site from Git](images/new-site-from-git.png)
 
-This will open a wizard to connect Netify to your GitHub repository and deploy your site. 
+This will open a wizard to connect Netlify to your GitHub repository and deploy your site. 
 
-Whenever you push your changes up to origin, Netify will recognize it, pull them to its server, and render the .md file into HTML. 
+Whenever you push your changes up to origin, Netlify will recognize it, pull them to its server, and render the .md file into HTML. 
 
 Now you officially have a web site for other people to see. Time to personalize it so the world doesn't see your crummy template, but rather, your own stuff.
 
@@ -86,7 +86,7 @@ These are easy fixes. From RStudio, open your /config.yaml file. There you will 
 
 The "Li" icon is actuall a png file named "logo.png". You can specify a different file name, or overwrite the file. It is located at /themes/hugo-lithium/static/images. I made own logo, similar to the defaul, but with my own initials.
 
-Commit your changes back to the origin remote. Netify will update your website automatically.
+Commit your changes back to the origin remote. Netlify will update your website automatically.
 
 ## 5. Write Your First Post
 
