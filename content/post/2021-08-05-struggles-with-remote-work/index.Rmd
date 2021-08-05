@@ -1,0 +1,19 @@
+---
+title: Struggles with Remote Work
+author: Michael Foley
+date: '2021-08-05'
+slug: struggles-with-remote-work
+categories:
+  - ML
+tags: []
+---
+
+Buffer published [The 2021 State of Remote Work](https://buffer.com/2021-state-of-remote-work), a summary of a survey of over 2,000 remote workers in late 2020. The report was a follow up to the [2020 report](https://lp.buffer.com/state-of-remote-work-2020) which was featured in [MakeoverMonday](https://data.world/makeovermonday/2020w32). Buffer made the [2021 report data]("https://docs.google.com/spreadsheets/d/1aJFW-_Rq3xNa2Fos-raoA1sF23CwT9sLAfHopjMZnLs/edit?usp=sharing") available as a Google sheets file on Google Docs.
+
+The Buffer survey found that workers overwhelmingly support remote work. However, they did share struggles such as difficulty unplugging from the office, collaborating, and loneliness. I was curious about what factors impact their struggles.
+
+![screenshot](images/screenshot_struggle.png)
+
+The difficulty here is that _all_ of the predictor variables are categorical.
+
+My project code is on [GitHub](https://github.com/mpfoley73/remote-work), and the knitted output is [here](/projects/remote-work/). 
