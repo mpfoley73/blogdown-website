@@ -11,11 +11,26 @@ tags: []
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
-<p>Buffer published <a href="https://buffer.com/2021-state-of-remote-work">The 2021 State of Remote Work</a>, a summary of a survey of over 2,000 remote workers in late 2020. The report was a follow up to the <a href="https://lp.buffer.com/state-of-remote-work-2020">2020 report</a> which was featured in <a href="https://data.world/makeovermonday/2020w32">MakeoverMonday</a>. Buffer made the <a href="%22https://docs.google.com/spreadsheets/d/1aJFW-_Rq3xNa2Fos-raoA1sF23CwT9sLAfHopjMZnLs/edit?usp=sharing%22">2021 report data</a> available as a Google sheets file on Google Docs.</p>
-<p>The Buffer survey found that workers overwhelmingly support remote work. However, they did share struggles such as difficulty unplugging from the office, collaborating, and loneliness. I was curious about what factors impact their struggles.</p>
-<div class="figure">
-<img src="images/screenshot_struggle.png" alt="" />
-<p class="caption">screenshot</p>
+<p>Buffer published <a href="https://buffer.com/2021-state-of-remote-work">The 2021 State of Remote Work</a>, a summary of a survey of over 2,000 remote workers in late 2020 and made the data available as a Google sheets file on <a href="%22https://docs.google.com/spreadsheets/d/1aJFW-_Rq3xNa2Fos-raoA1sF23CwT9sLAfHopjMZnLs/edit?usp=sharing%22">Google Docs</a>. BTW, the report is a follow up to their <a href="https://lp.buffer.com/state-of-remote-work-2020">2020 survey</a> which was featured in <a href="https://data.world/makeovermonday/2020w32">MakeoverMonday</a>, a great program devoted to rethinking data visualization.</p>
+<p>Buffer found that remote workers overwhelmingly support remote work. However, they did share struggles such as difficulty unplugging from the office, collaborating, and loneliness. I’m curious what factors might predict struggles.</p>
+<p><img src="images/screenshot_struggle.png" /></p>
+<p>The survey asked a few dozen questions related to remote-work, most of them multiple choice (full list <a href="projects/remote-work/1_get_data.html">here</a>. Some questions were personal (respondent’s race, industry, job, experience level). Some focused on what drew them into remote work (a disability, being a caretaker to a child or family member, or COVID). Others related to how remote work changed their lives (working more/less, was the transition smooth, what changed the most).</p>
+<p>Predicting which among several discrete states an observation will take is a <em>multiple classification</em> task. So binary logistic regression is off the table. But several other methods are still open. There is multinomial logistic regression (which I know nothing about), classification trees, and <em>k</em> nearest neighbors (kNN). I’ve decided to go with kNN.</p>
+<p>If you are interested, my project code is on <a href="https://github.com/mpfoley73/remote-work">GitHub</a>, and published <a href="/projects/remote-work/">here</a>. The first thing I discovered that nearly every respondent preferred remote work.</p>
+<p><img src="images/everyone_likes_it.png" /></p>
+<p>So when exploring and predicting the attributes associated with remote-work struggles, it’s important to recognize that these are people who like remote work, and are asked to select <em>something</em> negative, even if it is just a <em>little</em> negative. <a href="/projects/remote-work/2_explore.html">Section 2</a> of my report includes a series of univariate analysis charts showing the distrution of struggles related to the responses to other survey questions. There were some predictable associations, and some insightful ones:</p>
+<ul>
+<li>New workers were struggled most with motivation. More experienced workers struggled with loneliness - but more experienced the worker, the less the struggle.</li>
+<li>Parents and caregivers were much more likely to struggle with distractions. The upside is that they were also less likely to feel lonely.</li>
+<li>Smaller organizations struggle with distractions, motivation; bigger with unplugging.</li>
+</ul>
+<div id="modeling-with-knn" class="section level2">
+<h2>Modeling with KNN</h2>
+<p>The kNN model is conceptually straight-forward. kNN predicts the classification of each observation by looking at the <em>k</em> observations that are “closest” to it. “Close” can mean different things, but its usually something like the Euclidean distance between all the preditor variables. That can be an issue for categorical variables who’s one-hot encoded values are either 0 or 1. As I discovered <a href="https://quantdev.ssri.psu.edu/sites/qdev/files/kNN_tutorial.html">here</a> and <a href="https://stats.stackexchange.com/questions/271043/k-nearest-neighbour-with-continuous-and-binary-variables">here</a>, classification algorithms struggle with categorical predictors.</p>
+<p>My kNN algorithm predicted the most popular struggle, <em>unplugging</em>, about 97% of the time (full analysis <a href="/projects/remote-work/3_knn.html">here</a>)! If you had to guess one, you might as well guess the most popular struggle. Looking at the variable importance measures, the response to the survey item “<em>Are you working remotely as a result of COVID-19?</em>” was by far the most important variable. That was particularly surprising because it didn’t seem to be particularly predictive of any struggle other than perhaps dealing with timezone difference with other employees.</p>
+<p><img src="images/covid.png" /></p>
 </div>
-<p>The difficulty here is that <em>all</em> of the predictor variables are categorical.</p>
-<p>My project code is on <a href="https://github.com/mpfoley73/remote-work">GitHub</a>, and the knitted output is <a href="/projects/remote-work/">here</a>.</p>
+<div id="what-to-conclude" class="section level2">
+<h2>What to conclude?</h2>
+<p>I consider this project a failure, at least in terms of identifying the important factors underlying struggles with remote-work. I wonder what kinds of results I would have gotten if I had numeric predictor variables. It might also have helped to have respondents who were not so overwhelming unified in their approval of remote-work - with so little variation in the data, it’s hard to tease out causes of variation!</p>
+</div>
