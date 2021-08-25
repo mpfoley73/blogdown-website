@@ -1,0 +1,219 @@
+---
+title: Interpreting Logistic Regression Interactions
+author: Michael Foley
+date: '2021-08-15'
+slug: interpreting-logistic-regression-interactions
+categories:
+  - ML
+tags:
+  - logistic
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+<link href="{{< blogdown/postref >}}index_files/tabwid/tabwid.css" rel="stylesheet" />
+
+
+<p>Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is</p>
+<p><span class="math display">\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]</span></p>
+<p>A <span class="math inline">\(\delta = x_1 - x_0\)</span> unit change in <span class="math inline">\(x\)</span> in a estimated regression <span class="math inline">\(\hat{y} = X\hat{\beta}\)</span> is associated with a <span class="math inline">\(\delta\hat{\beta}\)</span> factor change in the <em>log odds</em> of <span class="math inline">\(y\)</span>. More commonly, you take the exponent of the coefficient estimate and say a <span class="math inline">\(\delta\)</span> unit change is associated with a <span class="math inline">\(e^{\delta\hat{\beta}}\)</span> factor change in the <em>odds</em> of <span class="math inline">\(y\)</span> (see my <a href="https://bookdown.org/mpfoley1973/supervised-ml/">handbook</a>). The factor change in the odds, <span class="math inline">\(y^{&#39;} = y \cdot e^{\delta \hat{\beta}}\)</span>, means <span class="math inline">\(e^{\delta\hat{\beta}}\)</span> is the <em>odds ratio</em> relative to the reference level of the predictor variable. How does this change when there are interaction terms? I’m going to tackle that here.</p>
+<p>Here’s the game plan. Base R dataset <code>esoph</code> has cancer diagnoses and several categorical predictor variables. We’ll <em>manually</em> calculate the cancer odds for each combination of predictors and combine them into odds ratios, then show how those same values flow from a fitted logistic regression model.</p>
+<p>Let’s start with those cancer odds.</p>
+<div id="odds-and-odds-ratios" class="section level2">
+<h2>Odds and Odds Ratios</h2>
+<p>The <code>esoph</code> dataset is a count of cancer cases in a <a href="https://pubmed.ncbi.nlm.nih.gov/28846237/">case-control study</a>. Column <code>ncases</code> is a count of positive diagnoses and <code>ncontrols</code> is a count of negative diagnoses. The dataset has three explanatory variables, but to keep this simple, I’ll narrow the set to one age group, three levels of explanatory variable alcohol consumption (<code>alcgp</code>) and two levels of tobacco consumption (<code>tobgp</code>).</p>
+<pre class="r"><code>library(tidyverse)
+
+dat &lt;- esoph %&gt;%
+  filter(agegp == &quot;65-74&quot;) %&gt;%
+  mutate(alc = factor(alcgp, ordered = FALSE),
+         alc = fct_collapse(alc, 
+                            &quot;L&quot; = &quot;0-39g/day&quot;, 
+                            &quot;M&quot; = &quot;40-79&quot;, 
+                            &quot;H&quot; = &quot;80-119&quot;, &quot;H&quot; = &quot;120+&quot;),
+         tob = factor(tobgp, ordered = FALSE),
+         tob = fct_collapse(tob, 
+                            &quot;L&quot; = &quot;0-9g/day&quot;, 
+                            &quot;H&quot; = c(&quot;10-19&quot;, &quot;20-29&quot;, &quot;30+&quot;))) %&gt;%
+  group_by(alc, tob) %&gt;%
+  summarize(.groups = &quot;drop&quot;, 
+            ncases = sum(ncases), 
+            ncontrols = sum(ncontrols))
+
+dat
+## # A tibble: 6 x 4
+##   alc   tob   ncases ncontrols
+##   &lt;fct&gt; &lt;fct&gt;  &lt;dbl&gt;     &lt;dbl&gt;
+## 1 L     L          5        43
+## 2 L     H          6        17
+## 3 M     L         17        17
+## 4 M     H          8        11
+## 5 H     L          9         8
+## 6 H     H         10        10</code></pre>
+<p>The cancer odds is the ratio of the probability of a positive diagnosis to the probability of a negative diagnosis, which given the common denominator is just the ratio of counts.</p>
+<p><span class="math display">\[odds = \frac{\pi_+}{\pi_-} = \frac{\mathrm{ncases / n}}{\mathrm{ncontrols / n}} = \frac{\mathrm{ncases}}{\mathrm{ncontrols}}\]</span></p>
+<pre class="r"><code>dat &lt;- dat %&gt;%
+  mutate(odds = ncases / ncontrols)
+
+dat %&gt;% 
+  ggplot(aes(x = tob, y = odds, color = alc, group = alc)) +
+  geom_point(stat = &quot;summary&quot;, fun = sum) +
+  stat_summary(fun = sum, geom=&quot;line&quot;) +
+  geom_label(aes(label = scales::number(odds, accuracy = .001))) +
+  labs(title = &quot;Alcohol moderates effect of tobacco on cancer odds.&quot;) +
+  theme_light()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>The figure above shows how the risk of cancer increases with tobacco use and with alcohol consumption, but their effects vary by their combination. If tobacco and alcohol had independent effects on cancer, you’d see parallel lines. Instead, we say alcohol “moderates” the effect of tobacco on cancer risk, and vice-versa.</p>
+<p>You can combine these six combinations of alcohol and tobacco into odds ratios (OR). There are 6x6=36 possible OR combinations. In my experience, I’ve only cared about comparisons to the reference group. From the data frame definition, we’ve chosen <code>tob</code> = “L” and <code>alc</code> = “L” as the reference group. Its the top row in Table 1.</p>
+<pre class="r"><code>odds_ratios &lt;- merge(dat, dat, by = NULL) %&gt;%
+  mutate(odds_1_lbl = paste0(&quot;alc&quot;, alc.x, &quot;tob&quot;, tob.x),
+         odds_2_lbl = paste0(&quot;alc&quot;, alc.y, &quot;tob&quot;, tob.y),
+         odds_ratio_lbl = paste(odds_1_lbl, odds_2_lbl, sep = &quot;:&quot;),
+         OR = odds.x / odds.y) %&gt;%
+  select(odds_1_lbl, odds_2_lbl, odds_ratio_lbl, odds_1 = odds.x, odds_2 = odds.y, OR)
+
+odds_ratios %&gt;% 
+  mutate(odds_1 = scales::number(odds_1, accuracy = .001),
+         odds_2 = scales::number(odds_2, accuracy = .001),
+         OR = scales::number(OR, accuracy = .001),
+         ` ` = paste(odds_1_lbl, odds_1)) %&gt;%
+  select(-c(odds_ratio_lbl, odds_1_lbl, odds_1)) %&gt;%
+  pivot_wider(names_from = c(odds_2_lbl, odds_2), values_from = OR, names_sep = &quot;\n&quot;) %&gt;%
+  flextable::flextable() %&gt;%
+  flextable::set_caption(&quot;36 possible odds ratios formed from 6 odds.&quot;) %&gt;%
+  flextable::theme_vanilla() %&gt;%
+  flextable::border(j = 1, border.right = officer::fp_border()) %&gt;%
+  flextable::bold(j = 1) %&gt;%
+  flextable::autofit()</code></pre>
+<template id="77d9756f-1c26-47c4-b309-c517ee021467"><style>
+.tabwid table{
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-spacing: 0;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+</style><div class="tabwid"><style>.cl-30e6bb72{border-collapse:collapse;}.cl-30d7b1a4{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-30d7b1a5{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-30d7dabc{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-30d860f4{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860f5{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860f6{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860f7{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860f8{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860f9{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860fa{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860fb{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860fc{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860fd{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d860fe{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888a4{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888a5{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888a6{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888a7{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888a8{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888a9{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888aa{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888ab{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888ac{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888ad{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d888ae{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa0{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa1{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa2{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa3{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa4{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa5{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa6{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-30d8afa7{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class='cl-30e6bb72'>
+<caption class="Table Caption">
+<span id="tab:unnamed-chunk-3">Table 1: </span>36 possible odds ratios formed from 6 odds.
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-30d8afa2"><p class="cl-30d7dabc"><span class="cl-30d7b1a4"> </span></p></td><td class="cl-30d8afa3"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcLtobL<br>0.116</span></p></td><td class="cl-30d8afa5"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcLtobH<br>0.353</span></p></td><td class="cl-30d8afa6"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcMtobL<br>1.000</span></p></td><td class="cl-30d8afa4"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcMtobH<br>0.727</span></p></td><td class="cl-30d8afa5"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcHtobL<br>1.125</span></p></td><td class="cl-30d8afa7"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcHtobH<br>1.000</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-30d860f7"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcLtobL 0.116</span></p></td><td class="cl-30d860f6"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td><td class="cl-30d860f4"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.329</span></p></td><td class="cl-30d860f8"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.116</span></p></td><td class="cl-30d860f9"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.160</span></p></td><td class="cl-30d860f4"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.103</span></p></td><td class="cl-30d860f5"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.116</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-30d860fc"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcLtobH 0.353</span></p></td><td class="cl-30d888a4"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">3.035</span></p></td><td class="cl-30d860fe"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td><td class="cl-30d860fb"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.353</span></p></td><td class="cl-30d860fa"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.485</span></p></td><td class="cl-30d860fe"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.314</span></p></td><td class="cl-30d860fd"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.353</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-30d860fc"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcMtobL 1.000</span></p></td><td class="cl-30d888a4"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">8.600</span></p></td><td class="cl-30d860fe"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">2.833</span></p></td><td class="cl-30d860fb"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td><td class="cl-30d860fa"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.375</span></p></td><td class="cl-30d860fe"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.889</span></p></td><td class="cl-30d860fd"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-30d888a8"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcMtobH 0.727</span></p></td><td class="cl-30d888a5"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">6.255</span></p></td><td class="cl-30d888a6"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">2.061</span></p></td><td class="cl-30d888a7"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.727</span></p></td><td class="cl-30d888aa"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td><td class="cl-30d888a6"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.646</span></p></td><td class="cl-30d888a9"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.727</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-30d860fc"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcHtobL 1.125</span></p></td><td class="cl-30d888a4"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">9.675</span></p></td><td class="cl-30d860fe"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">3.188</span></p></td><td class="cl-30d860fb"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.125</span></p></td><td class="cl-30d860fa"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.547</span></p></td><td class="cl-30d860fe"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td><td class="cl-30d860fd"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.125</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-30d8afa1"><p class="cl-30d7dabc"><span class="cl-30d7b1a4">alcHtobH 1.000</span></p></td><td class="cl-30d888ac"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">8.600</span></p></td><td class="cl-30d888ae"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">2.833</span></p></td><td class="cl-30d888ad"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td><td class="cl-30d8afa0"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.375</span></p></td><td class="cl-30d888ae"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">0.889</span></p></td><td class="cl-30d888ab"><p class="cl-30d7dabc"><span class="cl-30d7b1a5">1.000</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="685db7a5-6a31-4c95-b2e9-9c398238d15d"></div>
+<script>
+var dest = document.getElementById("685db7a5-6a31-4c95-b2e9-9c398238d15d");
+var template = document.getElementById("77d9756f-1c26-47c4-b309-c517ee021467");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+</div>
+<div id="logistic-regression-model" class="section level2">
+<h2>Logistic Regression Model</h2>
+<p>Recall that a logistic regression fits the <em>log odds</em> of the response variable to the predictor variables. In the equation below, <span class="math inline">\(\pi\)</span> is the event probability (in this case, a cancer diagnosis).</p>
+<p><span class="math display">\[y = \mathrm{logit(\pi)} = \ln\left(\frac{\pi}{1-\pi}\right) = X\beta\]</span></p>
+<p>Our data set is summarized so that <code>ncases</code> and <code>ncontrols</code> combine to specify the binary response to the predictor combinations (see <code>?glm()</code>). Let’s model the log-odds of cancer as a function of alcohol and tobacco consumption, including their interaction.</p>
+<pre class="r"><code>mdl &lt;- glm(cbind(ncases, ncontrols) ~ alc*tob, data = dat, family = binomial())
+
+broom::tidy(mdl)
+## # A tibble: 6 x 5
+##   term        estimate std.error statistic    p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 (Intercept)    -2.15     0.472     -4.55 0.00000526
+## 2 alcM            2.15     0.584      3.69 0.000228  
+## 3 alcH            2.27     0.678      3.35 0.000812  
+## 4 tobH            1.11     0.670      1.66 0.0974    
+## 5 alcM:tobH      -1.43     0.884     -1.62 0.106     
+## 6 alcH:tobH      -1.23     0.941     -1.31 0.192</code></pre>
+<p>The intercept term, -2.152, is the log odds of a positive cancer diagnosis for the reference group (<code>tob</code> = “L” and <code>alc</code> = “L”). The <em>p</em>-value is &lt;.0001, so it is significantly different from 0. The exponentiated intercept term, 0.116, equals <span class="math inline">\(e^\hat{Y}\)</span>, the <em>odds</em> of a positive cancer diagnosis, for the reference group. That means a <code>tob</code> = “L”, <code>alc</code> = “L” person has an expected <em>probability</em> of cancer of <span class="math inline">\(e^\hat{Y} / (1 + e^\hat{Y}) =\)</span> 10.4% (inverse logit formula).</p>
+<p>The interpretation of the coefficient estimators, <span class="math inline">\(\hat{\beta}\)</span>, is “a <span class="math inline">\(\delta\)</span> change in <em>x</em> is associated with a <span class="math inline">\(\delta\hat{\beta}\)</span> change in the log-odds of <em>y</em>.” A difference in logs is the same as the log of their ratio, so you can express the change as a ratio.</p>
+<p><span class="math display">\[\begin{eqnarray}
+\delta\beta &amp;=&amp; \log(\pi / (1-\pi))|_{X_1} - \log(\pi / (1-\pi))|_{X_0}\\
+ &amp;=&amp; \log\left[\frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}}\right]
+\end{eqnarray}\]</span></p>
+<p>A <span class="math inline">\(\delta = 1\)</span> unit increase in <code>tobH</code> from 0 to 1 (from “L” to “H”) is associated with a 1.11 increase in the log-odds of cancer.</p>
+<p>Log-odds are abstract, but since we can express the change in log-odds as the log of a ratio, we can just exponentiate both sides of the equation.</p>
+<pre class="r"><code>broom::tidy(mdl, exponentiate = TRUE)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   term        estimate std.error statistic    p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 (Intercept)    0.116     0.472     -4.55 0.00000526
+## 2 alcM           8.60      0.584      3.69 0.000228  
+## 3 alcH           9.67      0.678      3.35 0.000812  
+## 4 tobH           3.04      0.670      1.66 0.0974    
+## 5 alcM:tobH      0.240     0.884     -1.62 0.106     
+## 6 alcH:tobH      0.293     0.941     -1.31 0.192</code></pre>
+<p>The exponentiated coefficient estimators equal the ratio of the odds after and before the change. I.e., they are odds ratios. A <span class="math inline">\(\delta\)</span> unit change in <em>x</em> is associated with a factor <span class="math inline">\(e^{\delta\hat{\beta}}\)</span> change in the <em>odds</em> of <em>y</em>.</p>
+<p><span class="math display">\[e^{\delta\beta} = \frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}}\]</span></p>
+<p>The exponentiated <code>tobH</code> coefficient estimator, <code>exp(tobH) =</code> 3.04, is the expected factor change in the <em>odds</em> of a positive cancer diagnosis associated with a one-unit change in tobacco usage (from “L” to “H”). That means a high-tobacco user’s cancer odds are 3.04 <span class="math inline">\(\times\)</span> 0.116 times that of a low-tobacco user, or 0.353 (26.1%).</p>
+<p>We need to be careful here, because our model includes interaction terms. That means we expect the effects of each variable to differ depending on the values of the other variables. The coefficient interpretations of <code>alcM</code>, <code>alcH</code>, and <code>tobH</code> are relative to the reference group.</p>
+<ul>
+<li><code>alcM =</code> 8.60: OR of <code>alc</code> at “M” vs “L” when <code>tob</code> = “L”</li>
+<li><code>alcH =</code> 9.67: OR of <code>alc</code> at “H” vs “L” when <code>tob</code> = “L”</li>
+<li><code>tobH =</code> 3.04: OR of <code>tob</code> at “H” vs “L” when <code>alc</code> = “L”</li>
+</ul>
+<p>Now we’re ready to tackle those interaction terms.</p>
+</div>
+<div id="interaction-effects" class="section level2">
+<h2>Interaction Effects</h2>
+<p><code>alcM:tobH</code> measures how the <code>alcM</code> and <code>tobH</code> odds ratios change when you also change the reference group. <code>alcM:tobH =</code> 0.240 means the odds ratio of <code>alc</code> = “M” vs “L” when <code>tob</code> = “H” is 0.240 times what it is when <code>tob</code> = “L”. And, the odds ratio of <code>tobH</code> = “H” vs “L” when <code>alc</code> = “M” is 0.240 times what it is when <code>alc</code> = “L”.</p>
+<ul>
+<li><code>alcM *</code> 0.240 = 2.06: OR of <code>alc</code> at “M” vs “L” when <code>tob</code> = “H”</li>
+<li><code>tobH *</code> 0.240 = 0.73: OR of <code>tob</code> at “H” vs “L” when <code>alc</code> = “M”</li>
+</ul>
+<p>It’s the same for <code>alcH:tobH =</code> 0.293.</p>
+<ul>
+<li><code>alcH *</code> 0.293 = 2.83: OR of <code>alc</code> at “H” vs “L” when <code>tob</code> = “H”</li>
+<li><code>tobH *</code> 0.293 = 0.89: OR of <code>tob</code> at “H” vs “L” when <code>alc</code> = “H”</li>
+</ul>
+<p>But wait - there’s two more odds ratios we can estimate! The effects are multiplicative, so we can calculate the odds ratio of <code>alc</code> = “M” &amp; <code>tob</code> = “H” vs the reference group, and <code>alc</code> = “H” &amp; <code>tob</code> = “H” vs the reference group.</p>
+<ul>
+<li><code>alcM * tobH * alcM:tobH =</code> 6.25</li>
+<li><code>alcH * tobH * alcH:tobH =</code> 8.60.</li>
+</ul>
+<p>This calculations took us all the way down the first column of our odd-ratio table above.</p>
+</div>
+<div id="about-the-p-values" class="section level2">
+<h2>About the p-Values</h2>
+</div>
+<div id="key-take-aways" class="section level2">
+<h2>Key Take-aways</h2>
+<p>What have we learned?</p>
+<ul>
+<li><p>Exponentiated coefficient estimates are odds ratios. The interaction effects are multiplicative moderators of the main effects.</p></li>
+<li><p>When the <em>p</em>-value of an interaction is significant, that means the slopes of the odds lines in your figure are statistically different from each other.</p></li>
+<li><p>Combinations of main-effects and interaction effects always get you a comparison of one group vs another group.</p></li>
+</ul>
+</div>
