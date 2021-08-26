@@ -17,8 +17,6 @@ A $\delta = x_1 - x_0$ unit change in $x$ in a estimated regression $\hat{y} = X
 
 Here's the game plan. Base R dataset `esoph` has cancer diagnoses and several categorical predictor variables. We'll _manually_ calculate the cancer odds for each combination of predictors and combine them into odds ratios, then show how those same values flow from a fitted logistic regression model.
 
-Let's start with those cancer odds.
-
 ## Odds and Odds Ratios
 
 The `esoph` dataset is a count of cancer cases in a [case-control study](https://pubmed.ncbi.nlm.nih.gov/28846237/). Column `ncases` is a count of positive diagnoses and `ncontrols` is a count of negative diagnoses. The dataset has three explanatory variables, but to keep this simple, I'll narrow the set to one age group, three levels of explanatory variable alcohol consumption (`alcgp`) and two levels of tobacco consumption (`tobgp`).
@@ -62,9 +60,9 @@ dat %>%
   theme_light()
 ```
 
-The figure above shows how the risk of cancer increases with tobacco use and with alcohol consumption, but their effects vary by their combination. If tobacco and alcohol had independent effects on cancer, you'd see parallel lines. Instead, we say alcohol "moderates" the effect of tobacco on cancer risk, and vice-versa.
+The figure above shows how cancer odds increase with tobacco use and with alcohol consumption, but their effects vary by their combination. If tobacco and alcohol had independent effects on cancer, you'd see parallel lines. Instead, we say alcohol "moderates" the effect of tobacco on cancer risk, and vice-versa.
 
-You can combine these six combinations of alcohol and tobacco into odds ratios (OR). There are 6x6=36 possible OR combinations. In my experience, I've only cared about comparisons to the reference group. From the data frame definition, we've chosen `tob` = "L" and `alc` = "L" as the reference group. Its the top row in Table 1.
+You can combine these six combinations of alcohol and tobacco into odds ratios (OR). There are 6x6=36 possible ORs. In my experience, I've only cared about comparisons to the reference group. From the data frame definition, we've chosen `tob` = "L" and `alc` = "L" as the reference group. Its the top row in Table 1.
 
 ```{r collapse=TRUE}
 odds_ratios <- merge(dat, dat, by = NULL) %>%
@@ -98,12 +96,13 @@ $$y = \mathrm{logit(\pi)} = \ln\left(\frac{\pi}{1-\pi}\right) = X\beta$$
 Our data set is summarized so that `ncases` and `ncontrols` combine to specify the binary response to the predictor combinations (see `?glm()`). Let's model the log-odds of cancer as a function of alcohol and tobacco consumption, including their interaction.
 
 ```{r collapse=TRUE}
-mdl <- glm(cbind(ncases, ncontrols) ~ alc*tob, data = dat, family = binomial())
+mdl <- glm(cbind(ncases, ncontrols) ~ alc*tob, data = dat, 
+           family = binomial())
 
 broom::tidy(mdl)
 ```
 
-The intercept term, `r coef(mdl)["(Intercept)"] %>% scales::number(accuracy = .001)`, is the log odds of a positive cancer diagnosis for the reference group (`tob` = "L" and `alc` = "L"). The _p_-value is <.0001, so it is significantly different from 0. The exponentiated intercept term, `r coef(mdl)["(Intercept)"] %>% exp() %>% scales::number(accuracy = .001)`, equals $e^\hat{Y}$, the _odds_ of a positive cancer diagnosis, for the reference group. That means a `tob` = "L", `alc` = "L" person has an expected _probability_ of cancer of $e^\hat{Y} / (1 + e^\hat{Y}) =$ `r (exp(coef(mdl)["(Intercept)"]) / (1 + exp(coef(mdl)["(Intercept)"]))) %>% scales::percent(accuracy = .1)` (inverse logit formula). 
+The intercept term, `r coef(mdl)["(Intercept)"] %>% scales::number(accuracy = .001)`, is the log odds of a positive cancer diagnosis for the reference group (`tob` = "L" and `alc` = "L"). The _p_-value is <.0001, so it is significantly different from 0. Its exponential, `r coef(mdl)["(Intercept)"] %>% exp() %>% scales::number(accuracy = .001)`, equals $e^\hat{Y}$, the _odds_ of a positive cancer diagnosis for the reference group. That means a `tob` = "L", `alc` = "L" person has an expected _probability_ of cancer of $e^\hat{Y} / (1 + e^\hat{Y}) =$ `r (exp(coef(mdl)["(Intercept)"]) / (1 + exp(coef(mdl)["(Intercept)"]))) %>% scales::percent(accuracy = .1)` (inverse logit formula). 
 
 The interpretation of the coefficient estimators, $\hat{\beta}$, is "a $\delta$ change in _x_ is associated with a $\delta\hat{\beta}$ change in the log-odds of _y_." A difference in logs is the same as the log of their ratio, so you can express the change as a ratio.
 
@@ -112,21 +111,19 @@ $$\begin{eqnarray}
  &=& \log\left[\frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}}\right]
 \end{eqnarray}$$
 
-A $\delta = 1$ unit increase in `tobH` from 0 to 1 (from "L" to "H") is associated with a `r coef(mdl)["tobH"] %>% scales::number(accuracy = .01)` increase in the log-odds of cancer. 
+A $\delta = 1$ unit increase in `tobH` from 0 to 1 (from "L" to "H") is associated with a `r coef(mdl)["tobH"] %>% scales::number(accuracy = .01)` increase in the log-odds of cancer for a low-alcohol (`alc` = "L") user. Log-odds are abstract, but since we can express the change in log-odds as the log of a ratio, we can take the exponential.
 
-Log-odds are abstract, but since we can express the change in log-odds as the log of a ratio, we can just exponentiate both sides of the equation. 
+$$e^{\delta\beta} = \frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}} = \mathrm{OR}$$
+
+The exponentiated coefficient estimators equal the ratio of the odds after and before the change. I.e., they are odds ratios. A $\delta$ unit change in _x_ is associated with a factor $e^{\delta\hat{\beta}}$ change in the _odds_ of _y_.
 
 ```{r}
 broom::tidy(mdl, exponentiate = TRUE)
 ```
 
-The exponentiated coefficient estimators equal the ratio of the odds after and before the change. I.e., they are odds ratios. A $\delta$ unit change in _x_ is associated with a factor $e^{\delta\hat{\beta}}$ change in the _odds_ of _y_.
+The exponentiated `tobH` coefficient estimator, `exp(tobH) = ` `r coef(mdl)["tobH"] %>% exp() %>% scales::number(accuracy = .01)`, is the expected factor change in the _odds_ of a positive cancer diagnosis associated with a $\delta = 1$ unit change in tobacco usage (from "L" to "H") for a low-alcohol (`alc` = "L") user.
 
-$$e^{\delta\beta} = \frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}}$$
-
-The exponentiated `tobH` coefficient estimator, `exp(tobH) = ` `r coef(mdl)["tobH"] %>% exp() %>% scales::number(accuracy = .01)`, is the expected factor change in the _odds_ of a positive cancer diagnosis associated with a one-unit change in tobacco usage (from "L" to "H"). That means a high-tobacco user's cancer odds are `r coef(mdl)["tobH"] %>% exp() %>% scales::number(accuracy = .01)` $\times$ `r coef(mdl)["(Intercept)"] %>% exp() %>% scales::number(accuracy = .001)` times that of a low-tobacco user, or `r exp(coef(mdl)["(Intercept)"] + coef(mdl)["tobH"]) %>% scales::number(accuracy = .001)` (`r (exp(coef(mdl)["(Intercept)"] + coef(mdl)["tobH"]) / (1 + exp(coef(mdl)["(Intercept)"] + coef(mdl)["tobH"]))) %>% scales::percent(accuracy = .1)`). 
-
-We need to be careful here, because our model includes interaction terms. That means we expect the effects of each variable to differ depending on the values of the other variables. The coefficient interpretations of `alcM`, `alcH`, and `tobH` are relative to the reference group.
+We need to be careful here, because our model includes interaction terms. That means we expect the effects of each variable to differ depending on the values of the other variables. The coefficient interpretations of `alcM`, `alcH`, and `tobH` are relative to the reference group (`alc` = "L" and `tob = "L").
 
 * `alcM = ` `r coef(mdl)["alcM"] %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" when `tob` = "L" 
 * `alcH = ` `r coef(mdl)["alcH"] %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" when `tob` = "L" 
@@ -136,26 +133,32 @@ Now we're ready to tackle those interaction terms.
 
 ## Interaction Effects
 
-`alcM:tobH` measures how the `alcM` and `tobH` odds ratios change when you also change the reference group. `alcM:tobH = ` `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` means the odds ratio of `alc` = "M" vs "L" when `tob` = "H" is `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` times what it is when `tob` = "L". And, the odds ratio of `tobH` = "H" vs "L" when `alc` = "M" is `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` times what it is when `alc` = "L". 
+`alcM:tobH` measures how the `alcM` and `tobH` odds ratios change when you also change the reference group. `alcM:tobH = ` `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` means the odds ratio of `alc` = "M" vs "L" when `tob` = "H" is `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` times what it is when `tob` = "L". It also means the odds ratio of `tobH` = "H" vs "L" when `alc` = "M" is `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` times what it is when `alc` = "L". 
 
-* `alcM * ` `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` = `r (coef(mdl)["alcM"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" when `tob` = "H"
-* `tobH * ` `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` = `r (coef(mdl)["tobH"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "M"
+* `alcM * alcM:tobH` = `r (coef(mdl)["alcM"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" when `tob` = "H"
+* `tobH * alcM:tobH` = `r (coef(mdl)["tobH"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "M"
 
 It's the same for `alcH:tobH =` `r coef(mdl)['alcH:tobH'] %>% exp() %>% scales::number(accuracy = .001)`.
 
-* `alcH * ` `r coef(mdl)["alcH:tobH"] %>% exp() %>% scales::number(accuracy = .001)` = `r (coef(mdl)["alcH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" when `tob` = "H"
-* `tobH * ` `r coef(mdl)["alcH:tobH"] %>% exp() %>% scales::number(accuracy = .001)` = `r (coef(mdl)["tobH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "H"
+* `alcH * alcH:tobH` = `r (coef(mdl)["alcH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" when `tob` = "H"
+* `tobH * alcH:tobH` = `r (coef(mdl)["tobH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "H"
 
 But wait - there's two more odds ratios we can estimate! The effects are multiplicative, so we can calculate the odds ratio of `alc` = "M" & `tob` = "H" vs the reference group, and `alc` = "H" & `tob` = "H" vs the reference group.
 
-* `alcM * tobH * alcM:tobH = ` `r (coef(mdl)["alcM"] + coef(mdl)['tobH'] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`
-* `alcH * tobH * alcH:tobH = ` `r (coef(mdl)['alcH'] + coef(mdl)['tobH'] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`.
+* `alcM * tobH * alcM:tobH = ` `r (coef(mdl)["alcM"] + coef(mdl)['tobH'] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" and `tob` at "H" vs "L"
+* `alcH * tobH * alcH:tobH = ` `r (coef(mdl)['alcH'] + coef(mdl)['tobH'] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" and `tob` at "H" vs "L"
 
 This calculations took us all the way down the first column of our odd-ratio table above.
 
 ## About the p-Values
 
+Neither of the interaction term _p_-values were significant at the .05 level. That means the slopes of the moderation lines are not significantly different from the reference line.
 
+What does it mean if a main effect coefficient estimate is significant, but neither moderator is significant? It means it was unnecessary to control for the interaction in the model. The OR associated with the coefficient estimate applies equally at all levels of the other controlling variables.
+
+What does it mean if an interaction effect coefficient estimate is significant, but the main effect is not significant? It means the combined effects differ from the reference group, but changing only one variable is not different from the reference group. In this case, it would mean `alcM & tobH` differs `alc` = "L" and `tob` = "L", but not from `alcL & tobH` or `alcM & tobL`.
+
+What does it mean if both the main effect and the interaction effect is significant? It means you must interpret your results relative to the reference group.
 
 ## Key Take-aways
 
