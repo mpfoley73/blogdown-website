@@ -1,0 +1,21 @@
+---
+title: What's Taking So Long? Baseball Time Series Analysis
+author: Michael Foley
+date: '2021-11-07'
+slug: what-s-taking-so-long-baseball-time-series-analysis
+categories: 
+  - projects
+tags:
+  - time-series
+  - arima
+  - exponential-smoothing
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>Everyone complains that major league baseball games take too long. I agree. The average Cleveland Indians baseball game lasted 3 hours and 5 minutes in 2021. That’s about 1 hour longer than I’d prefer. It hasn’t always been this way. Up until WW II, games lasted only about 2 hours.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>I compiled that figure using data from <a href="https://www.baseball-reference.com/">Baseball-Reference.com</a>. The data on Baseball-Reference is fantastic, but you do have to work a little to get it into useable form. There is one year worth of game statistics per team on available as static web pages. Here is the Cleveland Indians url for 2021: <a href="https://www.baseball-reference.com/teams/CLE/2021-schedule-scores.shtml" class="uri">https://www.baseball-reference.com/teams/CLE/2021-schedule-scores.shtml</a>. My R script to pull down all of the web pages and scrape the tables is located on <a href="https://github.com/mpfoley73/cleveland-mlb-games">GitHub</a> (see <a href="https://github.com/mpfoley73/cleveland-mlb-games/blob/main/step_1_get_games.R">step_1_get_games.R</a>).</p>
+<p>I performed a trend analysis to forecast game times over the next decade. My estimates ranged from 3 hours 12 minutes to 3 hours 15 minutes by 2031. Ugh. I published the whole study on <a href="https://mpfoley73.github.io/cleveland-mlb-games/">GitHub Pages</a> (the <a href="https://mpfoley73.github.io/cleveland-mlb-games/step_2_exploration.html">exploratory analysis</a> is especially interesting). Here is what a typical forecast looks like. The 95% CI is pretty wide by 2031, but we’re mostly heading in the wrong direction.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>

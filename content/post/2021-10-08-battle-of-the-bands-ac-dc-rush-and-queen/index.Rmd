@@ -3,10 +3,11 @@ title: 'Battle of the Bands: Text Analysis  of Rush, Queen, and AC/DC'
 author: Michael Foley
 date: '2021-10-08'
 slug: battle-of-the-bands-ac-dc-rush-and-queen
-categories: []
+categories: 
+  - Projects
 tags:
-  - Rush
-  - Queen
+  - NLP
+  - STM
 ---
 
 ```{r include=FALSE}
