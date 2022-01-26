@@ -121,44 +121,154 @@ The exponentiated coefficient estimators equal the ratio of the odds after and b
 broom::tidy(mdl, exponentiate = TRUE)
 ```
 
-The exponentiated `tobH` coefficient estimator, `exp(tobH) = ` `r coef(mdl)["tobH"] %>% exp() %>% scales::number(accuracy = .01)`, is the expected factor change in the _odds_ of a positive cancer diagnosis associated with a $\delta = 1$ unit change in tobacco usage (from "L" to "H") for a low-alcohol (`alc` = "L") user.
+We've just seen that the exponential of the intercept, `exp(tobH) = ` `r coef(mdl)["(Intercept)"] %>% exp() %>% scales::number(.001)`, is the odds of a positive cancer diagnosis for the reference group (`alc` = *L*, `tob` = *L*). Now look at the three main-effects terms, `alcM`, `alcH`, and `tobH`. These terms are the expected change in the log odds of a positive cancer diagnosis associated with a $\delta = 1$ unit change in the variable *holding the other variable at the reference level*. E.g., `alcM` is the change in the log odds associated with a `tob` = *L* person changing from `alc` = *L* to `alc` = *M*. The log of a difference equals the ratio of the logs (basic math), so the *exponential* of the `alcM`, `alcH`, and `tobH` is the ratio of the *odds*, the *odds ratio* (OR).
 
-We need to be careful here, because our model includes interaction terms. That means we expect the effects of each variable to differ depending on the values of the other variables. The coefficient interpretations of `alcM`, `alcH`, and `tobH` are relative to the reference group (`alc` = "L" and `tob = "L").
-
-* `alcM = ` `r coef(mdl)["alcM"] %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" when `tob` = "L" 
-* `alcH = ` `r coef(mdl)["alcH"] %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" when `tob` = "L" 
-* `tobH = ` `r coef(mdl)["tobH"] %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "L" 
-
-Now we're ready to tackle those interaction terms.
+* `alcM = ` `r coef(mdl)["alcM"] %>% exp() %>% scales::number(accuracy = .01)` is the odds of a positive diagnosis for `alc` = *M*, `tob` = *L* over the odds of a positive diagnosis for `alc` = *L* `tob` = *L*.  
+* `alcH = ` `r coef(mdl)["alcH"] %>% exp() %>% scales::number(accuracy = .01)` is the odds of a positive diagnosis for `alc` = *H*, `tob` = *L* over the odds of a positive diagnosis for `alc` = *L* `tob` = *L*.  
+* `tobH = ` `r coef(mdl)["tobH"] %>% exp() %>% scales::number(accuracy = .01)` is the odds of a positive diagnosis for `alcL` = *L*, `tob` = *H* over the odds of a positive diagnosis for `alc` = *L* `tob` = *L*.  
 
 ## Interaction Effects
 
-`alcM:tobH` measures how the `alcM` and `tobH` odds ratios change when you also change the reference group. `alcM:tobH = ` `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` means the odds ratio of `alc` = "M" vs "L" when `tob` = "H" is `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` times what it is when `tob` = "L". It also means the odds ratio of `tobH` = "H" vs "L" when `alc` = "M" is `r coef(mdl)["alcM:tobH"] %>% exp() %>% scales::number(accuracy = .001)` times what it is when `alc` = "L". 
+Now we're ready to tackle the interaction terms. The interaction terms measure the incremental change in the odds when you hold the other variable fixed at a different level. E.g., when estimating the change in the log odds of a positive diagnosis associated with a change from `alc` = *L* to `alc` = *M*, `alcM:tobH` is the adjustment associated with using a reference level `tob` = *H* instead of `tob` = *H*.
 
-* `alcM * alcM:tobH` = `r (coef(mdl)["alcM"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" when `tob` = "H"
-* `tobH * alcM:tobH` = `r (coef(mdl)["tobH"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "M"
+* `alcM * alcM:tobH` = `r coef(mdl)["alcM"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)['alcM:tobH'] %>% exp() %>% scales::number(.01)` = `r (coef(mdl)["alcM"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(.01)` is the odds of a positive diagnosis for `alc` = *M*, `tob` = *H* over `alc` = *L* `tob` = *H*.
+* `tobH * alcM:tobH` = `r coef(mdl)["tobH"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)['alcM:tobH'] %>% exp() %>% scales::number(.01)` = `r (coef(mdl)["tobH"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(.01)` is the odds of a positive diagnosis for `alc` = *M*, `tob` = *H* over `alc` = *M* `tob` = *L*.
+* `alcH * alcH:tobH` = `r coef(mdl)["alcH"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)['alcH:tobH'] %>% exp() %>% scales::number(.01)` = `r (coef(mdl)["alcH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(.01)` is the odds of a positive diagnosis for `alc` = *H*, `tob` = *H* over `alc` = *L* `tob` = *H*.
+* `tobH * alcH:tobH` = `r coef(mdl)["tobH"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)['alcH:tobH'] %>% exp() %>% scales::number(.01)` = `r (coef(mdl)["tobH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(.01)` is the odds of a positive diagnosis for `alc` = *H*, `tob` = *H* over `alc` = *H* `tob` = *L*.
 
-It's the same for `alcH:tobH =` `r coef(mdl)['alcH:tobH'] %>% exp() %>% scales::number(accuracy = .001)`.
+But wait - there's two more odds ratios we can estimate! The effects are multiplicative, so we can calculate the odds ratios of changing both `alc` and `tob` vs the reference group.
 
-* `alcH * alcH:tobH` = `r (coef(mdl)["alcH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" when `tob` = "H"
-* `tobH * alcH:tobH` = `r (coef(mdl)["tobH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `tob` at "H" vs "L" when `alc` = "H"
+* `alcM * tobH * alcM:tobH` = `r coef(mdl)["alcM"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)["tobH"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)['alcM:tobH'] %>% exp() %>% scales::number(.01)` = `r (coef(mdl)["alcM"] + coef(mdl)["tobH"] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(.01)` is the odds of a positive diagnosis for `alc` = *M*, `tob` = *H* over `alc` = *L* `tob` = *L*.
+* `alcH * tobH * alcH:tobH` = `r coef(mdl)["alcH"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)["tobH"] %>% exp() %>% scales::number(.01)` * `r coef(mdl)['alcH:tobH'] %>% exp() %>% scales::number(.01)` = `r (coef(mdl)["alcH"] + coef(mdl)["tobH"] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(.01)` is the odds of a positive diagnosis for `alc` = *H*, `tob` = *H* over `alc` = *L* `tob` = *L*.
 
-But wait - there's two more odds ratios we can estimate! The effects are multiplicative, so we can calculate the odds ratio of `alc` = "M" & `tob` = "H" vs the reference group, and `alc` = "H" & `tob` = "H" vs the reference group.
+If you are following along, you see we've calculated 7 of the odds ratios from Table 1. In fact, you can calculate all 36 odds ratios through combinations of main effects and interaction effects. 
 
-* `alcM * tobH * alcM:tobH = ` `r (coef(mdl)["alcM"] + coef(mdl)['tobH'] + coef(mdl)['alcM:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "M" vs "L" and `tob` at "H" vs "L"
-* `alcH * tobH * alcH:tobH = ` `r (coef(mdl)['alcH'] + coef(mdl)['tobH'] + coef(mdl)['alcH:tobH']) %>% exp() %>% scales::number(accuracy = .01)`: OR of `alc` at "H" vs "L" and `tob` at "H" vs "L"
-
-This calculations took us all the way down the first column of our odd-ratio table above.
+```{r}
+alcLtobL = exp(coef(mdl)["(Intercept)"])
+alcLtobH = exp(coef(mdl)["tobH"])
+alcMtobL = exp(coef(mdl)["alcM"])
+alcMtobH = exp(coef(mdl)["alcM"]) * exp(coef(mdl)["tobH"]) * exp(coef(mdl)["alcM:tobH"])
+alcHtobL = exp(coef(mdl)["alcH"])
+alcHtobH = exp(coef(mdl)["alcH"]) * exp(coef(mdl)["tobH"]) * exp(coef(mdl)["alcH:tobH"])
+tribble(
+  ~num, ~den, ~OR,
+  "alcLtobL", "1", alcLtobL,
+  "alcLtobH", "1", alcLtobL * alcLtobH,
+  "alcMtobL", "1", alcLtobL * alcMtobL,
+  "alcMtobH", "1", alcLtobL * alcMtobH,
+  "alcHtobL", "1", alcLtobL * alcHtobL,
+  "alcHtobH", "1", alcLtobL * alcHtobH,
+  "alcLtobL", "alcLtobL", exp(coef(mdl)["(Intercept)"]) / exp(coef(mdl)["(Intercept)"]),
+  "alcLtobH", "alcLtobL", alcLtobH,
+  "alcMtobL", "alcLtobL", alcMtobL,
+  "alcMtobH", "alcLtobL", alcMtobH,
+  "alcHtobL", "alcLtobL", alcHtobL,
+  "alcHtobH", "alcLtobL", alcHtobH,
+  "alcLtobL", "alcLtobH", 1 / alcLtobH,
+  "alcLtobH", "alcLtobH", alcLtobH / alcLtobH,
+  "alcMtobL", "alcLtobH", alcMtobL / alcLtobH,
+  "alcMtobH", "alcLtobH", alcMtobH / alcLtobH,
+  "alcHtobL", "alcLtobH", alcHtobL / alcLtobH,
+  "alcHtobH", "alcLtobH", alcHtobH / alcLtobH,
+  "alcLtobL", "alcMtobL", 1 / alcMtobL,
+  "alcLtobH", "alcMtobL", alcLtobH / alcMtobL,
+  "alcMtobL", "alcMtobL", alcMtobL / alcMtobL,
+  "alcMtobH", "alcMtobL", alcMtobH / alcMtobL,
+  "alcHtobL", "alcMtobL", alcHtobL / alcMtobL,
+  "alcHtobH", "alcMtobL", alcHtobH / alcMtobL,
+  "alcLtobL", "alcMtobH", 1 / alcMtobH,
+  "alcLtobH", "alcMtobH", alcLtobH / alcMtobH,
+  "alcMtobL", "alcMtobH", alcMtobL / alcMtobH,
+  "alcMtobH", "alcMtobH", alcMtobH / alcMtobH,
+  "alcHtobL", "alcMtobH", alcHtobL / alcMtobH,
+  "alcHtobH", "alcMtobH", alcHtobH / alcMtobH,
+  "alcLtobL", "alcHtobL", 1 / alcHtobL,
+  "alcLtobH", "alcHtobL", alcLtobH / alcHtobL,
+  "alcMtobL", "alcHtobL", alcMtobL / alcHtobL,
+  "alcMtobH", "alcHtobL", alcMtobH / alcHtobL,
+  "alcHtobL", "alcHtobL", alcHtobL / alcHtobL,
+  "alcHtobH", "alcHtobL", alcHtobH / alcHtobL,
+  "alcLtobL", "alcHtobH", 1 / alcMtobH,
+  "alcLtobH", "alcHtobH", alcLtobH / alcHtobH,
+  "alcMtobL", "alcHtobH", alcMtobL / alcHtobH,
+  "alcMtobH", "alcHtobH", alcMtobH / alcHtobH,
+  "alcHtobL", "alcHtobH", alcHtobL / alcHtobH,
+  "alcHtobH", "alcHtobH", alcHtobH / alcHtobH
+) %>%
+  pivot_wider(names_from = num, values_from = OR) %>%
+  flextable::flextable() %>%
+  flextable::set_caption("Odds ratios calculated from regression coefficients.") %>%
+  flextable::theme_vanilla() %>%
+  flextable::border(j = 1, border.right = officer::fp_border()) %>%
+  flextable::bold(j = 1) %>%
+  flextable::colformat_double(digits = 3) %>%
+  flextable::autofit()
+```
 
 ## About the p-Values
 
-Neither of the interaction term _p_-values were significant at the .05 level. That means the slopes of the moderation lines are not significantly different from the reference line.
+Neither of the interaction term _p_-values were significant at the .05 level. That means the slopes of the moderation lines are not significantly different from the reference levels line.
 
-What does it mean if a main effect coefficient estimate is significant, but neither moderator is significant? It means it was unnecessary to control for the interaction in the model. The OR associated with the coefficient estimate applies equally at all levels of the other controlling variables.
+If neither interaction term is significant, that means it was unnecessary to control for the interaction in the model. The main effect is the same at all levels of the controlling variables.
 
-What does it mean if an interaction effect coefficient estimate is significant, but the main effect is not significant? It means the combined effects differ from the reference group, but changing only one variable is not different from the reference group. In this case, it would mean `alcM & tobH` differs `alc` = "L" and `tob` = "L", but not from `alcL & tobH` or `alcM & tobL`.
+If an interaction term is significant, but the main effect is not significant, it means the combined effects differ from the reference group, but changing only one variable is not different from the reference group. In our example, it would mean `alcM & tobH` differs `alc` = "L" and `tob` = "L", but not from either `alcL & tobH` or `alcM & tobL`.
 
-What does it mean if both the main effect and the interaction effect is significant? It means you must interpret your results relative to the reference group.
+If both the main effect and the interaction effect is significant, it means you must interpret your results relative to the reference group.
+
+This raises another question. How do you report the *p*-value of the combined effect of two or more coefficients? The theoretical answer is that you need to combine the coefficient estimate variances to calculate a new *t*-statistic. Say you fit a model
+
+$$
+y = \beta_0 + \beta_1 \mathrm{alc} + \beta_2 \mathrm{tob} + \beta_3 \mathrm{alc:tob} + \epsilon
+$$
+
+and your fitted model coefficient estimators include $\hat{\beta}_{1M}$ (*Medium Alcohol*), $\hat{\beta}_{2H}$ (*High Tobacco*), and $\hat{\beta}_{3MH}$ (*MediumAlcohol:HighTobacco*). The estimator for the combined effect of *Medium Alcohol & High Tobacco* relative to the reference group *Low Alcohol & Low Tobacco*, $\hat{\alpha}$, is $\hat{\alpha} = \hat{\beta}_{1M} + \hat{\beta}_{2H} + \hat{\beta}_{3MH}$. The *p*-value associated with $\hat{\alpha}$ is $p = P(T>t)$ where $t = \hat{\alpha} / \mathrm{SE}(\hat{\alpha})$ (same as for any coefficient estimator). The difficulty is in retrieving $\mathrm{SE}(\hat{\alpha})$. It equals the squre root of te cobined coefficient estimator variances ([Wikipedia](https://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables)), $\mathrm{SE}(\alpha) = \sqrt{\mathrm{Var}(\alpha)}$:
+
+$$
+\begin{aligned}
+\mathrm{Var}(\alpha) = {} & \mathrm{Var}(\hat{\beta}_{1M}) + \mathrm{Var}(\hat{\beta}_{2H}) + \mathrm{Var}(\hat{\beta}_{3HM}) + \\
+& 2 \left(\mathrm{Cov}(\hat{\beta}_{1M}\hat{\beta}_{2H}) + \mathrm{Cov}(\hat{\beta}_{1M}\hat{\beta}_{3MH} + \mathrm{Cov}(\hat{\beta}_{2H}\hat{\beta}_{3MH}))\right)
+\end{aligned}
+$$
+
+Let's see this calculation by taking elements from the model variance-covariance matrix.
+
+```{r collapse=TRUE}
+mdl_vcov <- mdl %>% vcov() %>%  data.frame() %>% rownames_to_column()
+
+var_alcM <- mdl_vcov %>% filter(rowname == "alcM") %>% pull("alcM")
+var_tobH <- mdl_vcov %>% filter(rowname == "tobH") %>% pull("tobH")
+var_alcMtobH <- mdl_vcov %>% filter(rowname == "alcM:tobH") %>% pull("alcM.tobH")
+cov_alcM_tobH <- mdl_vcov %>% filter(rowname == "alcM") %>% pull("tobH")
+cov_alcM_alcMtobH <- mdl_vcov %>% filter(rowname == "alcM") %>% pull("alcM.tobH")
+cov_tobH_alcMtobH <- mdl_vcov %>% filter(rowname == "tobH") %>% pull("alcM.tobH")
+
+# alpha
+(alpha <- coef(mdl)["alcM"] + coef(mdl)["tobH"] + coef(mdl)["alcM:tobH"])
+
+# SE for Medium Alcohol + High Tobacco
+(se <- sqrt(var_alcM + var_tobH + var_alcMtobH + 
+             2 * (cov_alcM_tobH + cov_alcM_alcMtobH + cov_tobH_alcMtobH)))
+
+# t
+(t <- alpha / se)
+
+# p-value
+(p_value <- pt(abs(t), Inf, lower.tail = FALSE)* 2)
+```
+
+Happily, there is a package **emmeans** that calculates both the combined coefficient effects, and these *p*-values.
+
+```{r}
+emm <- emmeans::emmeans(mdl, ~ alc * tob)
+
+emm_contrast <- emmeans::contrast(emm, method = "revpairwise", adjust = "none")
+
+emm_contrast %>%
+  as_tibble() %>%
+  filter(str_detect(contrast, "L L$"))
+```
+
+There it is, second from bottom.
 
 ## Key Take-aways
 
@@ -169,3 +279,5 @@ What have we learned?
 * When the *p*-value of an interaction is significant, that means the slopes of the odds lines in your figure are statistically  different from each other.
 
 * Combinations of main-effects and interaction effects always get you a comparison of one group vs another group.
+
+* Use the **emmeans** package to calculate odds ratios and their associated *p*-values.
