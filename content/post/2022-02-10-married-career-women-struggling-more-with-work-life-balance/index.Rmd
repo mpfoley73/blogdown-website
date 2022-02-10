@@ -1,0 +1,52 @@
+---
+title: Married Career Women Struggling More with Work-Life Balance
+author: Michael Foley
+date: '2022-02-10'
+slug: married-career-women-struggling-more-with-work-life-balance
+categories:
+  - Projects
+tags:
+  - HR Analytics
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(scales)
+library(patchwork)
+library(janitor)
+library(kableExtra)
+library(questionr)
+library(survey)
+library(gtsummary)
+library(equatiomatic)
+
+set_gtsummary_theme(theme_gtsummary_compact())
+
+load("2_married_career_women.RData")
+```
+
+Organizations pursuing gender equity in leadership roles are often challenged by a lack of candidates. A 2019 study by McKinsey and LeanIn.org hypothesized the "broken rung" effect: *"The biggest obstacle women face on the path to senior leadership is at the first step up to manager."*^[Women in the Workplace 2019, McKinsey and LeanIn.Org, https://www.mckinsey.com/featured-insights/diversity-and-inclusion/women-in-the-workplace#nga_section_header_main_0_universal_1]. While companies will surely benefit by striving to develop and promote leaders equally, there may be social influences that create a headwind. One such influence is the tendency for women to exit the workforce in order to focus on family. A recent survey by the [Pew Research Foundation](https://www.pewresearch.org/social-trends/dataset/american-trends-panel-wave-77/) polled American households about their work experiences. The gender and family identifiers in the data offer a glimpse into how women and men balance family with career.^[My full analysis is [here](https://mpfoley73.github.io/pew-2020-working/2_married_career_women.html).] Below are some insights from the Pew data.
+
+Mothers in two-parent households with children under 18 are much less likely than fathers to be employed full-time (`r rq01$tibble_E_COVID_W77 %>% filter(F_GENDER == "Mothers" & E_COVID_W77 == "Employed full-time") %>% pull(pct) %>% percent(1)` of mothers vs. `r rq01$tibble_E_COVID_W77 %>% filter(F_GENDER == "Fathers" & E_COVID_W77 == "Employed full-time") %>% pull(pct) %>% percent(1)` of fathers) and much more likely to not be employed at all (`r rq01$tibble_E_COVID_W77 %>% filter(F_GENDER == "Mothers" & E_COVID_W77 == "Not employed") %>% pull(pct) %>% percent(1)` vs. `r rq01$tibble_E_COVID_W77 %>% filter(F_GENDER == "Fathers" & E_COVID_W77 == "Not employed") %>% pull(pct) %>% percent(1)`). Mothers are less likely to work full-time because they *choose* not to: in response to the survey question, "*At this point in your life, which of the following would be best for you personally?*", only `r rq01$tibble_FAMSURV1_W77 %>% filter(F_GENDER == "Mothers" & FAMSURV1_W77 == "Working full-time for pay") %>% pull(pct) %>% percent(1)` of mothers responded 'working full-time for pay' compared to `r rq01$tibble_FAMSURV1_W77 %>% filter(F_GENDER == "Fathers" & FAMSURV1_W77 == "Working full-time for pay") %>% pull(pct) %>% percent(1)` of fathers.
+
+```{r}
+rq01$plot_E_COVID_W77
+```
+
+One explanation for this is that mothers tend to take on more responsibility for child care. The Pew survey data shows that even when *both* parents work full time, mothers are more likely than fathers to carry the lion's share of domestic responsibilities. `r rq04$tibble_FAMSURV38_d_W77 %>% filter(FAMSURV38_d_W77 == "I do more" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` of mothers believed they were a more involved parent than their spouse. Only `r rq04$tibble_FAMSURV38_d_W77 %>% filter(FAMSURV38_d_W77 == "I do more" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)` made that claim. The asymmetry in the figure below suggests people tend to appreciate their own efforts over the partners, but the trend is clear nevertheless. `r rq04$tibble_FAMSURV38_c_W77 %>% filter(FAMSURV38_c_W77 == "I do more" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` feel they do more to manage the childrens' activities and schedule. `r rq04$tibble_FAMSURV38_c_W77 %>% filter(FAMSURV38_c_W77 == "Spouse does more" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)` agree. Women were also more likely to report doing more of the household chores (`r rq04$tibble_FAMSURV38_a_W77 %>% filter(FAMSURV38_a_W77 == "I do more" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq04$tibble_FAMSURV38_a_W77 %>% filter(FAMSURV38_a_W77 == "I do more" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`).
+
+```{r warning=FALSE}
+rq04$plot
+```
+ 
+It is likely that the unequal domestic demands negatively impact womens' careers. Pew asked respondents how things were going at work since the Covid pandemic hit. Mothers in two full-time working relationships were much more likely to report they were struggling. To balance work and parenting responsibilities, mothers were more likely to report reducing work hours (`r rq02$tibble_FAMSURV35_a_W77 %>% filter(FAMSURV35_a_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq02$tibble_FAMSURV35_a_W77 %>% filter(FAMSURV35_a_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)` of fathers), not being able to give 100% at work (`r rq02$tibble_FAMSURV35_b_W77 %>% filter(FAMSURV35_b_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq02$tibble_FAMSURV35_b_W77 %>% filter(FAMSURV35_b_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`), having to turn down a promotion (`r rq02$tibble_FAMSURV35_c_W77 %>% filter(FAMSURV35_c_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq02$tibble_FAMSURV35_c_W77 %>% filter(FAMSURV35_c_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`), and having to turn down an important work assignment (`r rq02$tibble_FAMSURV35_d_W77 %>% filter(FAMSURV35_d_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq02$tibble_FAMSURV35_d_W77 %>% filter(FAMSURV35_d_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`). 
+
+These pressures erode mothers' chances of advancement. Mothers were more likely to report being passed over for promotion (`r rq03$tibble_FAMSURV36_a_W77 %>% filter(FAMSURV36_a_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq03$tibble_FAMSURV36_a_W77 %>% filter(FAMSURV36_a_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`), being passed over for an important assignment (`r rq03$tibble_FAMSURV36_b_W77 %>% filter(FAMSURV36_b_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq03$tibble_FAMSURV36_b_W77 %>% filter(FAMSURV36_b_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`), and being treated as not committed to work (`r rq03$tibble_FAMSURV36_c_W77 %>% filter(FAMSURV36_c_W77 == "Yes" & F_GENDER == "Mothers") %>% pull(pct) %>% percent(1)` vs. `r rq03$tibble_FAMSURV36_c_W77 %>% filter(FAMSURV36_c_W77 == "Yes" & F_GENDER == "Fathers") %>% pull(pct) %>% percent(1)`). 
+
+```{r}
+rq03$plot
+```
+
+Unless social attitudes about parenting roles change, it seems gender equity in the workforce will remain an issue. The broken rung in the career ladder for women may in part be due to the weight of their additional burdens.
