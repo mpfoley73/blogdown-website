@@ -1,0 +1,96 @@
+---
+title: Using Custom Fonts in R
+author: Michael Foley
+date: '2022-05-02'
+slug: []
+categories:
+  - Tutorial
+tags: []
+description: ''
+featured: ''
+featuredalt: ''
+featuredpath: ''
+linktitle: ''
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>For my new survival analysis project on <a href="https://mpfoley73.github.io/baseball-survival/">baseball career longevity</a>, I am using the TR Plaza font <a href="https://www.cleveland.com/entertainment/2022/04/cleveland-guardians-adopt-refreshed-design-look-to-go-with-new-name.html">adopted by the Cleveland Guardians</a> for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;">
+<div id="before" class="section level3">
+<h3>Before</h3>
+<p><img src="images/plot_before.png" /></p>
+</div>
+<div id="after" class="section level3">
+<h3>After</h3>
+<p><img src="images/plot_after.png" /></p>
+</div>
+</div>
+<p>I ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me. These instructions explain how to change the font face used in your R graphics. It does not change the text output.</p>
+<div id="the-standard-way" class="section level2">
+<h2>The standard way</h2>
+<p>If you already have the font installed on you system (i.e., it’s an available font in Microsoft Word), then you can follow the steps in <a href="https://r-coder.com/custom-fonts-r/">this tutorial</a> by R Coder. Here is an overview.</p>
+<p>The <strong>extrafont</strong> package (<a href="https://github.com/wch/extrafont">GitHub</a>) makes system fonts available for bitmap output. It maintains a database of the font metadata. Install the package. The installation will automatically bring in two other utility packages, <strong>extrafontdb</strong> and <strong>Rttf2p1</strong>.</p>
+<pre class="r"><code>install.packages(&quot;extrafont&quot;)</code></pre>
+<p>You only have to create the database of fonts on your system once. After that, it will be available to you whenever you load the <strong>extrafont</strong> package in your session. Create the database with <code>font_import()</code>.</p>
+<pre class="r"><code>library(extrafont)
+font_import()</code></pre>
+<p>This took my laptop about 15 minutes to run. Once its done, you can include your fonts in your ggplots like this.</p>
+<pre class="r"><code>library(tidyverse)
+library(extrafont)</code></pre>
+<pre><code>## Registering fonts with R</code></pre>
+<pre class="r"><code># Extrafont documentation has you load the fonts, but I accidentally left this
+# out and it worked anyway. When you run the `library()` statement it outputs a
+# message that it is &quot;Registering fonts with R.&quot;
+# loadfonts(device=&quot;win&quot;)
+
+ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() +
+  ggtitle(&quot;Georgia font!&quot;) +
+  theme(text = element_text(size = 16, family=&quot;Agency FB&quot;, face=&quot;italic&quot;))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>The key is setting the <code>family</code> argument of the <code>element_text()</code> function. How do you know what string to use? The name that appears in your MS Word font selection seems to always work. You can see the registered fonts with <code>extrafont::fonts()</code>, or even more detail with <code>extrafont::fonttable()</code>.</p>
+<pre class="r"><code>fonts() %&gt;% .[1:6] # just the first 6
+## [1] &quot;Agency FB&quot;             &quot;Algerian&quot;              &quot;Arial Black&quot;          
+## [4] &quot;Arial&quot;                 &quot;Arial Narrow&quot;          &quot;Arial Rounded MT Bold&quot;
+fonttable() %&gt;% head()
+##   package        afmfile                        fontfile          FullName
+## 1      NA AGENCYB.afm.gz C:\\Windows\\Fonts\\AGENCYB.TTF    Agency FB Bold
+## 2      NA AGENCYR.afm.gz C:\\Windows\\Fonts\\AGENCYR.TTF         Agency FB
+## 3      NA   ALGER.afm.gz   C:\\Windows\\Fonts\\ALGER.TTF          Algerian
+## 4      NA  ariblk.afm.gz  C:\\Windows\\Fonts\\ariblk.ttf       Arial Black
+## 5      NA arialbi.afm.gz C:\\Windows\\Fonts\\arialbi.ttf Arial Bold Italic
+## 6      NA arialbd.afm.gz C:\\Windows\\Fonts\\arialbd.ttf        Arial Bold
+##    FamilyName           FontName  Bold Italic Symbol afmsymfile
+## 1   Agency FB      AgencyFB-Bold  TRUE  FALSE  FALSE         NA
+## 2   Agency FB       AgencyFB-Reg FALSE  FALSE  FALSE         NA
+## 3    Algerian           Algerian FALSE  FALSE  FALSE         NA
+## 4 Arial Black        Arial-Black FALSE  FALSE  FALSE         NA
+## 5       Arial Arial-BoldItalicMT  TRUE   TRUE  FALSE         NA
+## 6       Arial       Arial-BoldMT  TRUE  FALSE  FALSE         NA</code></pre>
+</div>
+<div id="what-if-you-dont-already-have-the-font" class="section level2">
+<h2>What if you don’t already have the font?</h2>
+<p>Hopefully that is all you need inorder to customize your graphics. But what if you don’t already have the font installed on your system? TR Plaza wasn’t already installed on mine. Here’s how I added it. I googled “install TR Plaza font” and one of this hits was <a href="https://www.cufonfonts.com/font/tr-plaza">Cufon Fonts</a>. I clicked the download link. The site returned a zip file to my Downloads directory with the True Type Font file inside.</p>
+<p><img src="images/Screenshot%202022-05-02%20052504.png" /></p>
+<p>Double-clicking the .ttf file in the zip file opened a preview and installation app. I clicked Install to install the font.</p>
+<p><img src="images/Screenshot%202022-05-02%20052658.png" /></p>
+<p>That did it. Moving over to Microsoft Word, there’s my new font.</p>
+<p><img src="images/Screenshot%202022-05-02%20052941.png" /></p>
+<p>Returning to the <a href="https://r-coder.com/custom-fonts-r/">tutorial</a>, it says you can import additional fonts by supplying the path. Where is your new font? On Windows, you can find it like this. Open your system settings and go to Personalization &gt; Fonts. Find your font and click it.</p>
+<p><img src="images/Screenshot%202022-05-04%20054135.png" /></p>
+<p>Use the font file path in the import function.</p>
+<pre class="r"><code>font_import(path = &quot;C:/Users/mpfol/AppData/Local/Microsoft/Windows/Fonts&quot;)</code></pre>
+</div>
+<div id="if-that-doesnt-work" class="section level2">
+<h2>If that doesn’t work</h2>
+<p>When I ran <code>font_import()</code> I got the following error.</p>
+<pre class="r"><code>font_import(path = &quot;C:/Users/mpfol/AppData/Local/Microsoft/Windows/Fonts&quot;)</code></pre>
+<p><img src="images/Screenshot%202022-05-02%20045826.png" /></p>
+<p>I don’t know <em>why</em> this error occurs, but I did discover how to fix it. <a href="https://stackoverflow.com/questions/71572537/downloading-fonts-in-r-no-fontname-skipping">This thread</a> at Stack Overflow suggests installing version 1.3.8 of the <strong>Rttf2pt1</strong> package.</p>
+<pre class="r"><code>remotes::install_version(&quot;Rttf2pt1&quot;, version = &quot;1.3.8&quot;)</code></pre>
+<p>This time the command worked.</p>
+<pre class="r"><code>extrafont::font_import(path = &quot;C:/Users/mpfol/AppData/Local/Microsoft/Windows/Fonts&quot;)</code></pre>
+<p><img src="images/Screenshot%202022-05-02%20051508.png" /></p>
+<p>That’s all there is to it. The package <a href="https://github.com/wch/extrafont">GitHub</a> page has more instructions, especially for embedding fonts into pdf files.</p>
+</div>
