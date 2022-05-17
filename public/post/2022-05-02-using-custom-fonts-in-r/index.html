@@ -1,0 +1,1165 @@
+<!DOCTYPE HTML>
+
+<html>
+    <head>
+        <script type="application/ld+json">
+    {
+        "@context" : "http://schema.org",
+        "@type" : "BlogPosting",
+        "mainEntityOfPage": {
+             "@type": "WebPage",
+             "@id": "\/"
+        },
+        "articleSection" : "post",
+        "name" : "Using Custom Fonts in R",
+        "headline" : "Using Custom Fonts in R",
+        "description" : "For my new survival analysis project on baseball career longevity, I am using the TR Plaza font adopted by the Cleveland Guardians for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.\nBefore\r\rAfter\r\r\rI ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me.",
+        "inLanguage" : "en",
+        "author" : "",
+        "creator" : "",
+        "publisher": "",
+        "accountablePerson" : "",
+        "copyrightHolder" : "",
+        "copyrightYear" : "2022",
+        "datePublished": "2022-05-02 00:00:00 \u002b0000 UTC",
+        "dateModified" : "2022-05-02 00:00:00 \u002b0000 UTC",
+        "url" : "\/post\/2022-05-02-using-custom-fonts-in-r\/",
+        "wordCount" : "724",
+        "keywords" : [ "Blog" ]
+    }
+    </script>
+        
+            
+                <title>Using Custom Fonts in R</title>
+            
+        
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="generator" content="Hugo 0.86.0" />
+        
+
+
+        
+            <meta name="author" content="Michael Foley">
+        
+        
+            
+                <meta name="description" content="HTML5 UP theme, Future Imperfect with some extra goodies, ported by Julio Pescador. Powered by Hugo">
+            
+        
+
+        <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Using Custom Fonts in R"/>
+<meta name="twitter:description" content="For my new survival analysis project on baseball career longevity, I am using the TR Plaza font adopted by the Cleveland Guardians for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.
+BeforeAfterI ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me."/>
+<meta name="twitter:site" content="@mpfoley73"/>
+
+        <meta property="og:title" content="Using Custom Fonts in R" />
+<meta property="og:description" content="For my new survival analysis project on baseball career longevity, I am using the TR Plaza font adopted by the Cleveland Guardians for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.
+BeforeAfterI ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2022-05-02-using-custom-fonts-in-r/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-05-02T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-05-02T00:00:00+00:00" />
+
+
+        <meta property="og:image" content="//images/logo.png">
+        <meta property="og:image:type" content="image/png">
+        <meta property="og:image:width" content="512">
+        <meta property="og:image:height" content="512">
+        <meta itemprop="name" content="Using Custom Fonts in R">
+<meta itemprop="description" content="For my new survival analysis project on baseball career longevity, I am using the TR Plaza font adopted by the Cleveland Guardians for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.
+BeforeAfterI ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me."><meta itemprop="datePublished" content="2022-05-02T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2022-05-02T00:00:00+00:00" />
+<meta itemprop="wordCount" content="724">
+<meta itemprop="keywords" content="" />
+        
+
+        
+            
+        
+
+        
+        
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:400,800,900|Source+Sans+Pro:400,700">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.1.25/jquery.fancybox.min.css">
+            <link rel="stylesheet" href="/css/main.css">
+            <link rel="stylesheet" href="/css/add-on.css">
+            <link rel="stylesheet" href="/css/academicons.min.css">
+        
+
+        
+            
+                
+            
+        
+
+
+  
+    
+    <link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+  
+
+
+      
+    </head>
+    <body>
+
+      
+      <div id="wrapper">
+
+    
+    
+<header id="header">
+    
+      <h1><a href="/">post</a></h1>
+    
+
+    <nav class="links">
+        <ul>
+            
+                <li>
+                    <a href="/">
+                            <i class="fa fa-home">&nbsp;</i>Home
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/about/">
+                            <i class="fa fa-id-card-o">&nbsp;</i>About
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/blog/">
+                            <i class="fa fa-newspaper-o">&nbsp;</i>Blog
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/itemized/">
+                            <i class="fa fa-list">&nbsp;</i>Itemized
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/categories/">
+                            <i class="fa fa-sitemap">&nbsp;</i>Categories
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/contact/">
+                            <i class="fa fa-envelope-o">&nbsp;</i>Contact
+                    </a>
+                </li>
+            
+        </ul>
+    </nav>
+    <nav class="main">
+        <ul>
+            
+            <li id="share-nav" class="share-menu" style="display:none;">
+                <a class="fa-share-alt" href="#share-menu">Share</a>
+            </li>
+            
+            <li class="search">
+                <a class="fa-search" href="#search">Search</a>
+                <form id="search" method="get" action="//google.com/search">
+                    <input type="text" name="q" placeholder="Search" />
+                    <input type="hidden" name="as_sitesearch" value="/">
+                </form>
+            </li>
+            <li class="menu">
+                <a class="fa-bars" href="#menu">Menu</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+
+<section id="menu">
+
+    
+        <section>
+            <form class="search" method="get" action="//google.com/search">
+                <input type="text" name="q" placeholder="Search" />
+                <input type="hidden" name="as_sitesearch" value="/">
+            </form>
+        </section>
+
+    
+        <section>
+            <ul class="links">
+                
+                    <li>
+                        <a href="/">
+                            <h3>
+                                <i class="fa fa-home">&nbsp;</i>Home
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/about/">
+                            <h3>
+                                <i class="fa fa-id-card-o">&nbsp;</i>About
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/blog/">
+                            <h3>
+                                <i class="fa fa-newspaper-o">&nbsp;</i>Blog
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/itemized/">
+                            <h3>
+                                <i class="fa fa-list">&nbsp;</i>Itemized
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/">
+                            <h3>
+                                <i class="fa fa-sitemap">&nbsp;</i>Categories
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/contact/">
+                            <h3>
+                                <i class="fa fa-envelope-o">&nbsp;</i>Contact
+                            </h3>
+                        </a>
+                    </li>
+                
+            </ul>
+        </section>
+
+    
+        <section class="recent-posts">
+            <div class="mini-posts">
+                <header>
+                    <h3>Recent Posts</h3>
+                </header>
+                
+
+                
+                    
+                
+
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/">Post</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-05-02'>
+                                    May 2, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/2022-05-02-using-custom-fonts-in-r/">Using Custom Fonts in R</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-05-02'>
+                                    May 2, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/married-career-women-struggling-more-with-work-life-balance/">Married Career Women Struggling More with Work-Life Balance</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-02-10'>
+                                    February 10, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/cultural-origins-less-important-to-whites/">Cultural Origins Less Important to White Adults</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-01-17'>
+                                    January 17, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/ohio-employment/">Ohio Employment</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2021-11-20'>
+                                    November 20, 2021</time>
+                            </header>
+                            
+
+                        </article>
+                
+
+                
+                    <a href=
+                        
+                            /blog/
+                        
+                        class="button">View more posts</a>
+                
+            </div>
+        </section>
+
+    
+        
+</section>
+
+    <section id="share-menu">
+    <section id="social-share-nav">
+        <ul class="links">
+            <header>
+                <h3>Share this post <i class="fa fa-smile-o"></i></h3>
+            </header>
+            
+
+
+
+<li>
+  <a href="//twitter.com/share?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;text=Using%20Custom%20Fonts%20in%20R&amp;via=mpfoley73" target="_blank" class="share-btn twitter">
+    <i class="fa fa-twitter"></i>
+    <p>Twitter</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//plus.google.com/share?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f" target="_blank" class="share-btn google-plus">
+    <i class="fa fa-google-plus"></i>
+    <p>Google+</p>
+  </a>
+</li>
+
+
+
+
+
+<li>
+  <a href="//www.facebook.com/sharer/sharer.php?u=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f" target="_blank" class="share-btn facebook">
+    <i class="fa fa-facebook"></i>
+    <p>Facebook</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//reddit.com/submit?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;title=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn reddit">
+    <i class="fa fa-reddit-alien"></i>
+    <p>Reddit</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.linkedin.com/shareArticle?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;title=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn linkedin">
+      <i class="fa fa-linkedin"></i>
+      <p>LinkedIn</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.stumbleupon.com/submit?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;title=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn stumbleupon">
+    <i class="fa fa-stumbleupon"></i>
+    <p>StumbleUpon</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.pinterest.com/pin/create/button/?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;description=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn pinterest">
+    <i class="fa fa-pinterest-p"></i>
+    <p>Pinterest</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="mailto:?subject=Check out this post by Michael%20Foley&amp;body=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f" target="_blank" class="share-btn email">
+    <i class="fa fa-envelope"></i>
+    <p>Email</p>
+  </a>
+</li>
+
+
+        </ul>
+    </section>
+</section>
+
+    
+    <div id="main">
+        
+        
+        <article class="post">
+  <header>
+    <div class="title">
+        
+            <h1><a href="/post/2022-05-02-using-custom-fonts-in-r/">Using Custom Fonts in R</a></h1>
+            
+        
+        
+    </div>
+    <div class="meta">
+        
+
+        <time class="published"
+            datetime='2022-05-02'>
+            May 2, 2022</time>
+        <span class="author">Michael Foley</span>
+        
+            <p>4 minute read</p>
+        
+        
+    </div>
+</header>
+
+
+  
+    <section id="social-share">
+      <ul class="icons">
+        
+
+
+
+<li>
+  <a href="//twitter.com/share?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;text=Using%20Custom%20Fonts%20in%20R&amp;via=mpfoley73" target="_blank" class="share-btn twitter">
+    <i class="fa fa-twitter"></i>
+    <p>Twitter</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//plus.google.com/share?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f" target="_blank" class="share-btn google-plus">
+    <i class="fa fa-google-plus"></i>
+    <p>Google+</p>
+  </a>
+</li>
+
+
+
+
+
+<li>
+  <a href="//www.facebook.com/sharer/sharer.php?u=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f" target="_blank" class="share-btn facebook">
+    <i class="fa fa-facebook"></i>
+    <p>Facebook</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//reddit.com/submit?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;title=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn reddit">
+    <i class="fa fa-reddit-alien"></i>
+    <p>Reddit</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.linkedin.com/shareArticle?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;title=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn linkedin">
+      <i class="fa fa-linkedin"></i>
+      <p>LinkedIn</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.stumbleupon.com/submit?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;title=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn stumbleupon">
+    <i class="fa fa-stumbleupon"></i>
+    <p>StumbleUpon</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.pinterest.com/pin/create/button/?url=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f&amp;description=Using%20Custom%20Fonts%20in%20R" target="_blank" class="share-btn pinterest">
+    <i class="fa fa-pinterest-p"></i>
+    <p>Pinterest</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="mailto:?subject=Check out this post by Michael%20Foley&amp;body=%2fpost%2f2022-05-02-using-custom-fonts-in-r%2f" target="_blank" class="share-btn email">
+    <i class="fa fa-envelope"></i>
+    <p>Email</p>
+  </a>
+</li>
+
+
+      </ul>
+    </section>
+  
+
+  
+
+  <div id="content">
+    
+<script src="/post/2022-05-02-using-custom-fonts-in-r/index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>For my new survival analysis project on <a href="https://mpfoley73.github.io/baseball-survival/">baseball career longevity</a>, I am using the TR Plaza font <a href="https://www.cleveland.com/entertainment/2022/04/cleveland-guardians-adopt-refreshed-design-look-to-go-with-new-name.html">adopted by the Cleveland Guardians</a> for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;">
+<div id="before" class="section level3">
+<h3>Before</h3>
+<p><img src="images/plot_before.png" /></p>
+</div>
+<div id="after" class="section level3">
+<h3>After</h3>
+<p><img src="images/plot_after.png" /></p>
+</div>
+</div>
+<p>I ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me. These instructions explain how to change the font face used in your R graphics. It does not change the text output.</p>
+<div id="the-standard-way" class="section level2">
+<h2>The standard way</h2>
+<p>If you already have the font installed on you system (i.e., it’s an available font in Microsoft Word), then you can follow the steps in <a href="https://r-coder.com/custom-fonts-r/">this tutorial</a> by R Coder. Here is an overview.</p>
+<p>The <strong>extrafont</strong> package (<a href="https://github.com/wch/extrafont">GitHub</a>) makes system fonts available for bitmap output. It maintains a database of the font metadata. Install the package. The installation will automatically bring in two other utility packages, <strong>extrafontdb</strong> and <strong>Rttf2p1</strong>.</p>
+<pre class="r"><code>install.packages(&quot;extrafont&quot;)</code></pre>
+<p>You only have to create the database of fonts on your system once. After that, it will be available to you whenever you load the <strong>extrafont</strong> package in your session. Create the database with <code>font_import()</code>.</p>
+<pre class="r"><code>library(extrafont)
+font_import()</code></pre>
+<p>This took my laptop about 15 minutes to run. Once its done, you can include your fonts in your ggplots like this.</p>
+<pre class="r"><code>library(tidyverse)
+library(extrafont)</code></pre>
+<pre><code>## Registering fonts with R</code></pre>
+<pre class="r"><code># Extrafont documentation has you load the fonts, but I accidentally left this
+# out and it worked anyway. When you run the `library()` statement it outputs a
+# message that it is &quot;Registering fonts with R.&quot;
+# loadfonts(device=&quot;win&quot;)
+
+ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() +
+  ggtitle(&quot;Georgia font!&quot;) +
+  theme(text = element_text(size = 16, family=&quot;Agency FB&quot;, face=&quot;italic&quot;))</code></pre>
+<p><img src="/post/2022-05-02-using-custom-fonts-in-r/index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>The key is setting the <code>family</code> argument of the <code>element_text()</code> function. How do you know what string to use? The name that appears in your MS Word font selection seems to always work. You can see the registered fonts with <code>extrafont::fonts()</code>, or even more detail with <code>extrafont::fonttable()</code>.</p>
+<pre class="r"><code>fonts() %&gt;% .[1:6] # just the first 6
+## [1] &quot;Agency FB&quot;             &quot;Algerian&quot;              &quot;Arial Black&quot;          
+## [4] &quot;Arial&quot;                 &quot;Arial Narrow&quot;          &quot;Arial Rounded MT Bold&quot;
+fonttable() %&gt;% head()
+##   package        afmfile                        fontfile          FullName
+## 1      NA AGENCYB.afm.gz C:\\Windows\\Fonts\\AGENCYB.TTF    Agency FB Bold
+## 2      NA AGENCYR.afm.gz C:\\Windows\\Fonts\\AGENCYR.TTF         Agency FB
+## 3      NA   ALGER.afm.gz   C:\\Windows\\Fonts\\ALGER.TTF          Algerian
+## 4      NA  ariblk.afm.gz  C:\\Windows\\Fonts\\ariblk.ttf       Arial Black
+## 5      NA arialbi.afm.gz C:\\Windows\\Fonts\\arialbi.ttf Arial Bold Italic
+## 6      NA arialbd.afm.gz C:\\Windows\\Fonts\\arialbd.ttf        Arial Bold
+##    FamilyName           FontName  Bold Italic Symbol afmsymfile
+## 1   Agency FB      AgencyFB-Bold  TRUE  FALSE  FALSE         NA
+## 2   Agency FB       AgencyFB-Reg FALSE  FALSE  FALSE         NA
+## 3    Algerian           Algerian FALSE  FALSE  FALSE         NA
+## 4 Arial Black        Arial-Black FALSE  FALSE  FALSE         NA
+## 5       Arial Arial-BoldItalicMT  TRUE   TRUE  FALSE         NA
+## 6       Arial       Arial-BoldMT  TRUE  FALSE  FALSE         NA</code></pre>
+</div>
+<div id="what-if-you-dont-already-have-the-font" class="section level2">
+<h2>What if you don’t already have the font?</h2>
+<p>Hopefully that is all you need inorder to customize your graphics. But what if you don’t already have the font installed on your system? TR Plaza wasn’t already installed on mine. Here’s how I added it. I googled “install TR Plaza font” and one of this hits was <a href="https://www.cufonfonts.com/font/tr-plaza">Cufon Fonts</a>. I clicked the download link. The site returned a zip file to my Downloads directory with the True Type Font file inside.</p>
+<p><img src="images/Screenshot%202022-05-02%20052504.png" /></p>
+<p>Double-clicking the .ttf file in the zip file opened a preview and installation app. I clicked Install to install the font.</p>
+<p><img src="images/Screenshot%202022-05-02%20052658.png" /></p>
+<p>That did it. Moving over to Microsoft Word, there’s my new font.</p>
+<p><img src="images/Screenshot%202022-05-02%20052941.png" /></p>
+<p>Returning to the <a href="https://r-coder.com/custom-fonts-r/">tutorial</a>, it says you can import additional fonts by supplying the path. Where is your new font? On Windows, you can find it like this. Open your system settings and go to Personalization &gt; Fonts. Find your font and click it.</p>
+<p><img src="images/Screenshot%202022-05-04%20054135.png" /></p>
+<p>Use the font file path in the import function.</p>
+<pre class="r"><code>font_import(path = &quot;C:/Users/mpfol/AppData/Local/Microsoft/Windows/Fonts&quot;)</code></pre>
+</div>
+<div id="if-that-doesnt-work" class="section level2">
+<h2>If that doesn’t work</h2>
+<p>When I ran <code>font_import()</code> I got the following error.</p>
+<pre class="r"><code>font_import(path = &quot;C:/Users/mpfol/AppData/Local/Microsoft/Windows/Fonts&quot;)</code></pre>
+<p><img src="images/Screenshot%202022-05-02%20045826.png" /></p>
+<p>I don’t know <em>why</em> this error occurs, but I did discover how to fix it. <a href="https://stackoverflow.com/questions/71572537/downloading-fonts-in-r-no-fontname-skipping">This thread</a> at Stack Overflow suggests installing version 1.3.8 of the <strong>Rttf2pt1</strong> package.</p>
+<pre class="r"><code>remotes::install_version(&quot;Rttf2pt1&quot;, version = &quot;1.3.8&quot;)</code></pre>
+<p>This time the command worked.</p>
+<pre class="r"><code>extrafont::font_import(path = &quot;C:/Users/mpfol/AppData/Local/Microsoft/Windows/Fonts&quot;)</code></pre>
+<p><img src="images/Screenshot%202022-05-02%20051508.png" /></p>
+<p>That’s all there is to it. The package <a href="https://github.com/wch/extrafont">GitHub</a> page has more instructions, especially for embedding fonts into pdf files.</p>
+</div>
+
+  </div>
+
+  <footer>
+    <ul class="stats">
+  <li class="categories">
+    <ul>
+        
+            
+            
+                <i class="fa fa-folder"></i>
+                
+                
+                <li><a class="article-category-link" href="/categories/tutorial">Tutorial</a></li>
+                
+            
+        
+    </ul>
+  </li>
+  <li class="tags">
+    <ul>
+        
+            
+            
+        
+    </ul>
+  </li>
+</ul>
+
+  </footer>
+
+</article>
+
+    <article class="post">
+        <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "shortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </article>
+
+
+<ul class="actions pagination">
+    
+        <li><a href="/post/married-career-women-struggling-more-with-work-life-balance/"
+                class="button big previous">Married Career Women Struggling More with Work-Life Balance</a></li>
+    
+
+    
+</ul>
+
+
+    </div>
+    
+<section id="sidebar">
+
+  
+  <section id="intro">
+    
+    
+      
+        <a href='/' class="logo"><img src="/img/main/avatar.jpg" alt="Hugo Future Imperfect" /></a>
+      
+    
+    
+      <header>
+        <h2>Data Analyst</h2>
+        <p>Normally distributed, except for the long tail.</i></p>
+      </header>
+    
+    
+      <ul class="icons">
+        
+          
+    <li><a href="/index.xml" type="application/rss+xml" target="_blank" title="RSS" class="fa fa-rss"></a></li>
+
+
+        
+        
+  <li><a href="//github.com/mpfoley73/home" target="_blank" title="GitHub" class="fa fa-github"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//linkedin.com/in/mpfoley73" target="_blank" title="LinkedIn" class="fa fa-linkedin"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//twitter.com/mpfoley73" target="_blank" title="Twitter" class="fa fa-twitter"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="mailto:mpfoley73@hotmail.com" title="Email" class="fa fa-envelope"></a></li>
+
+
+      </ul>
+    
+  </section>
+
+  
+  <section class="recent-posts">
+    <div class="mini-posts">
+      <header>
+        <h3>Recent Posts</h3>
+      </header>
+      <div class="posts-container">
+        
+
+        
+          
+        
+
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/">Post</a>
+              </h3>
+              
+              <time class="published" datetime='2022-05-02'>
+                May 2, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/2022-05-02-using-custom-fonts-in-r/">Using Custom Fonts in R</a>
+              </h3>
+              
+              <time class="published" datetime='2022-05-02'>
+                May 2, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/married-career-women-struggling-more-with-work-life-balance/">Married Career Women Struggling More with Work-Life Balance</a>
+              </h3>
+              
+              <time class="published" datetime='2022-02-10'>
+                February 10, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/cultural-origins-less-important-to-whites/">Cultural Origins Less Important to White Adults</a>
+              </h3>
+              
+              <time class="published" datetime='2022-01-17'>
+                January 17, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/ohio-employment/">Ohio Employment</a>
+              </h3>
+              
+              <time class="published" datetime='2021-11-20'>
+                November 20, 2021
+              </time>
+            </header>
+            
+
+          </article>
+        
+      </div>
+
+      
+        <a href=
+          
+            /blog/
+          
+        class="button">View more posts</a>
+      
+    </div>
+  </section>
+
+  
+  
+  
+  
+  
+    <section id="categories">
+      <header>
+        <h3>
+          <a href="/categories/">Categories</a>
+        </h3>
+      </header>
+        
+          
+        
+
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/projects/">projects</a>
+                <span style="float:right;">3</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/ml/">ml</a>
+                <span style="float:right;">2</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/tableau/">tableau</a>
+                <span style="float:right;">2</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/infographics/">infographics</a>
+                <span style="float:right;">1</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/tutorial/">tutorial</a>
+                <span style="float:right;">1</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/website/">website</a>
+                <span style="float:right;">1</span>
+              
+            </header>
+          </article>
+        </p>
+        
+    </section>
+  
+  
+
+  
+  
+    <section id="mini-bio">
+      <h3>About</h3>
+      <p>I am a data analyst at Progressive Insurance where I ensure Progressive meets its recruiting, retention, performance, and inclusion goals. I specialize in inferential statistics, and work primarily with R and Tableau.</p>
+      <a href="/about/" class="button">Learn More</a>
+    </section>
+  
+
+  
+  <section id="footer">
+    
+      <ul class="icons">
+        
+          
+    <li><a href="/index.xml" type="application/rss+xml" target="_blank" title="RSS" class="fa fa-rss"></a></li>
+
+
+        
+        
+  <li><a href="//github.com/mpfoley73/home" target="_blank" title="GitHub" class="fa fa-github"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//linkedin.com/in/mpfoley73" target="_blank" title="LinkedIn" class="fa fa-linkedin"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//twitter.com/mpfoley73" target="_blank" title="Twitter" class="fa fa-twitter"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="mailto:mpfoley73@hotmail.com" title="Email" class="fa fa-envelope"></a></li>
+
+
+      </ul>
+    
+    <p class="copyright">
+      
+        &copy; 2022
+        
+          Hugo Future Imperfect
+        
+      .
+      Powered by <a href="//gohugo.io" target="_blank">Hugo</a>
+    </p>
+  </section>
+</section>
+
+    </div>
+    <a id="back-to-top" href="#" class="fa fa-arrow-up fa-border fa-2x"></a>
+    
+
+    
+      
+    
+
+    
+      
+      
+      
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+        
+        
+        
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/css.min.js"></script>
+        <script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+      
+    
+    
+    
+      <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.1.25/jquery.fancybox.min.js"></script>
+      <script src="/js/util.js"></script>
+      <script src="/js/main.js"></script>
+      <script src="/js/backToTop.js"></script>
+    
+
+    
+      
+        
+      
+    
+
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+      <script src="//yihui.name/js/math-code.js"></script>
+<script async
+src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+  </body>
+</html>
+

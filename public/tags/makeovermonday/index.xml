@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MakeoverMonday on Hugo Future Imperfect</title>
+    <link>/tags/makeovermonday/</link>
+    <description>Recent content in MakeoverMonday on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 26 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="/tags/makeovermonday/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>MakeoverMonday: Entry-Level Jobs</title>
+      <link>/post/makeovermonday-entry-level-jobs/</link>
+      <pubDate>Sun, 26 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/makeovermonday-entry-level-jobs/</guid>
+      <description>Our Makeover Monday Tableau user group at Progressive Insurance worked with 2021/W34: &amp;ldquo;Entry-level&amp;rdquo; jobs require 3+ years of experience this month.
+I posted my submission on Tableau Public. It looks similar to the original published on LinkedIn because their design is ideal. Sorted bar charts with labels are the easiest to read. I did try other designs, including one by Harish Rao that is pretty cool. You can see my other designs if you click the &amp;ldquo;download&amp;rdquo; below.</description>
+    </item>
+    
+    <item>
+      <title>My Netflix Habits</title>
+      <link>/post/my-netflix-habits/</link>
+      <pubDate>Sun, 29 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/my-netflix-habits/</guid>
+      <description>Our Makeover Monday developer user group at Progressive Insurance usually picks a topic from the UK MakeoverMonday to work with, but this month we chose a neat data set from Netflix. You can download your complete viewing history from the Netflix website (instructions here). (For some reason, I kept receiving an error message, &amp;ldquo;We ran into an issue preparing your viewing activity. You can try again now or come back at a later time.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,226 @@
+---
+title: 'Battle of the Bands: Text Analysis  of Rush, Queen, and AC/DC'
+author: Michael Foley
+date: '2021-10-08'
+slug: battle-of-the-bands-ac-dc-rush-and-queen
+categories: 
+  - Projects
+tags:
+  - NLP
+  - STM
+---
+
+```{r include=FALSE}
+library(tidyverse)
+library(janitor)
+library(glue)
+
+lyrics_complexity <- readRDS("C:/GitHub/battle-of-the-bands/3_lyrics.Rds")
+
+lyrics_topics <- readRDS("C:/GitHub/battle-of-the-bands/4_lyrics.Rds")
+fit_prevalence <- readRDS("C:/GitHub/battle-of-the-bands/4_model.Rds")
+lyrics_long <- readRDS("C:/GitHub/battle-of-the-bands/4_lyrics_long.Rds")
+
+band_palette <- c("Queen" = "lightgoldenrod", "Rush" = "darkseagreen", "AC/DC" = "slategray1")
+writer_palette <- c(
+  "Queen" = "lightgoldenrod", 
+  "Brian May" = "lightsalmon",
+  "Freddie Mercury" = "thistle", 
+  "Roger Taylor" = "lavender",
+  "John Deacon" = "lightpink", 
+  "Neil Peart" = "darkseagreen", 
+  "AC/DC" = "slategray1"
+)
+```
+
+I enjoy music from Rush and Queen. Queen has more listenable songs, and some of their early work is especially creative, both musically and lyrically. But in general, Rush features stronger lyrics. Rush's drummer and lyricist, Neil Peart, drew from a wide range of source material and employed an impressive vocabulary. Freddie Mercury, the lead singer from Queen, was not quite as creative. Mercury's three band mates also wrote songs and they were usually *not at all* lyrically interesting. I set out to discover whether my judgments are backed by machine learning techniques.
+
+Who is the best song-writer? It's really a competition between Neil Peart and Freddie Mercury, but I included _all_ Queen songs, including drummer Roger Tayler, guitarist Brian May, and bassist John Deacon. There were also several instances where the band collaborated on the lyrics. I also threw in AC/DC as a kind of control. AC/DC isn't horrible, but their lyrics don't make me think about the world differently. In total, I studied `r nrow(lyrics_complexity)` songs. I published my study on [GitHub](https://mpfoley73.github.io/battle-of-the-bands/) (source files [here](https://github.com/mpfoley73/battle-of-the-bands)).
+
+```{r echo=FALSE}
+lyrics_complexity %>% arrange(band, writer) %>% 
+  mutate(
+    writer = fct_inorder(writer),
+    writer = fct_relevel(writer, "Queen", after = 5)
+  ) %>% 
+  group_by(band, writer) %>%
+  summarize(.groups = "drop",
+    albums = n_distinct(album),
+    songs = n()
+  ) %>%
+  adorn_totals() %>%
+  adorn_percentages(denominator = "col") %>%
+  adorn_pct_formatting() %>%
+  adorn_ns() %>%
+  flextable::flextable() %>%
+  flextable::autofit()
+```
+
+The plot below shows the album releases for the three bands. The mostly overlap in time, although AC/DC is incredibly still producing music.
+
+```{r echo=FALSE}
+lyrics_complexity %>% 
+  count(band, released, album) %>%
+  mutate(
+    released = case_when(
+      album == "Fly by Night" ~ as.integer(1974), 
+      album == "Queen" ~ as.integer(1972),
+      album == "Queen II" ~ as.integer(1973),
+      TRUE ~ released)) %>% 
+  ggplot(aes(x = released, y = n, fill = band)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_manual(values = band_palette) +
+  geom_text(aes(label = album, y = 0.5), angle = 90, hjust = "bottom", vjust = .25,
+            size = 3, color = "grey50") +
+  scale_x_continuous(limits = c(1970, 2025), 
+                     breaks = seq(1970, 2025, by = 5), 
+                     minor_breaks = 1970:2025, 
+                     expand = c(0,0)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  ) +
+  labs(x = "Released", y = "Songs on Album", 
+       title = glue("{n_distinct(lyrics_complexity$album)} albums, {nrow(lyrics_complexity)} songs.")) +
+  facet_grid(rows = vars(band))
+```
+
+So what did I find? I evaluated the lyrics based on *text complexity*, and I fit topic models to evaluate the breadth of subjects discussed.
+
+# Text Complexity
+
+Neil Peart was the clear winner in terms of *complexity*. Text complexity measures are common in assessing age-appropriate reading material in schools, and in refining advertising content. They work less well for poetry and song lyrics where delineated sentences are often absent, but are still effective for comparisons. Neil Peart wrote the most complex songs, propelled by his penchant for long words. Brian May earned an honorable mention for textual richness. You can find this portion of the study [here](https://mpfoley73.github.io/battle-of-the-bands/3_complexity.html). The table below summarizes the results.
+
+```{r echo=FALSE}
+summary_stats <- lyrics_complexity %>% 
+  group_by(band, writer) %>%
+  summarize(.groups = "drop",
+    songs = n(),
+    asl_mean = mean(words_per_line), 
+    asl_median = median(words_per_line),
+    spw_mean = mean(syllables_per_word), 
+    spw_median = median(syllables_per_word),
+    flesch_mean = mean(flesch),
+    flesch_median = median(flesch),
+    flesch_kincaid_mean = mean(flesch_kincaid),
+    flesch_kincaid_median = median(flesch_kincaid),
+    dale_chall_mean = mean(dale_chall),
+    dale_chall_median = median(dale_chall),
+    ttr_mean = mean(ttr),
+    ttr_median = median(ttr),
+  )
+
+lyrics_complexity %>% 
+  select(writer, words_per_line:ttr) %>%
+  gtsummary::tbl_summary(
+    by = "writer",
+    statistic = list(c(words_per_line, syllables_per_word, flesch, 
+                       flesch_kincaid, dale_chall, ttr) ~ "{median}"))
+```
+
+Neil Peart songs were relatively lyric heavy in terms of how many **words per line**, but Brian May and John Deacon were not far behind. When Queen collaborated, they used few words per line. Winner: **Peart**.
+
+Neil Peart had by far the highest median **syllables per word**. Whereas the median for all other writers fell within a very narrow band around `r summary_stats %>% filter(writer != "Neil Peart") %>% summarize(wm = weighted.mean(spw_median, songs)) %>% pull(wm) %>% scales::number(accuracy = .01)`, Neil Peart had a whopping of `r summary_stats %>% filter(writer == "Neil Peart") %>% pull(spw_median) %>% scales::number(accuracy = .01)`. Peart had a large vocabulary and that is evident from this measure. AC/DC had the lowest median (`r summary_stats %>% filter(writer == "AC/DC") %>% pull(spw_median) %>% scales::number(accuracy = .01)`). Winner: **Neil Peart**.
+
+**Flesch's Reading Ease Score** combines words per line and syllables per line into a single score. It weight syllables more than words, so Neil Peart dominated with the lowest score (lower means more complex). Neil Peart's median Flesch score was `r summary_stats %>% filter(writer == "Neil Peart") %>% pull(flesch_median) %>% scales::number(accuracy = .1)` while everyone else ranged from `r summary_stats %>% filter(writer != "Neil Peart") %>% summarize(flesch_min = min(flesch_median)) %>% pull(flesch_min) %>% scales::number(accuracy = .1)` to `r summary_stats %>% filter(writer != "Neil Peart") %>% summarize(flesch_max = max(flesch_median)) %>% pull(flesch_max) %>% scales::number(accuracy = .1)`. AC/DC and Brian May were at the bottom. Winner: **Neil Peart**.
+
+**Flesch-Kincaid's** Grade Level score is similar to Flesch, except complex text results in *higher* grades. AC/DC and Brian May were at the bottom again. Peart's proclivity for polysyllabic words effectuated a transcendent median Flesch-Kincaid score of `r summary_stats %>% filter(writer == "Neil Peart") %>% pull(flesch_kincaid_median) %>% scales::number(accuracy = .01)`. Winner: **Neil Peart**.
+
+**Dale-Chall** factors the proportion of unfamiliar words in the song (lower score means more complex). Surprisingly, Queen had the most complex Dale-Chall median score (`r summary_stats %>% filter(writer == "Queen") %>% pull(dale_chall_median) %>% scales::number(accuracy = .1)`). Brian May finished last (`r summary_stats %>% filter(writer == "Brian May") %>% pull(dale_chall_median) %>% scales::number(accuracy = .1)`). Winner: **Queen**.
+
+Brian May edged out Queen and John Deacon for the most textually rich lyrics measured by **TTR**. May scored a median TTR of `r summary_stats %>% filter(writer == "Brian May") %>% pull(ttr_median) %>% scales::number(accuracy = .01)`. Winner: **Brian May**.
+
+Freddie Mercury was in the middle of the pack for all of the measures.
+
+# Topic Modeling
+
+```{r echo=FALSE}
+k <- lyrics_topics %>% select(starts_with("topic")) %>% colnames() %>% length()
+```
+
+Topic models identify dominant themes in text. It does this by looking at words that commonly appear together in some documents and not in others. I fit a structural topic model and it found `r k` topics. Here's for example, are the most commonly used words comprising topic #2. You can find the entire topic analysis [here](https://mpfoley73.github.io/battle-of-the-bands/4_topics.html).
+
+```{r echo=FALSE}
+stm::labelTopics(fit_prevalence, topics = 2)
+```
+
+The top 3 mappings to this topic are all songs by Neil Peart.
+
+```{r echo=FALSE}
+topic_thoughts <- stm::findThoughts(
+  fit_prevalence, 
+  n = 3, 
+  texts = lyrics_topics$lyrics, 
+  topics = 2
+)
+
+lyrics_topics[pluck(topic_thoughts$index, 1), ] %>% select(writer, song, song_url)
+```
+
+Viewed from the other direction, here are the top topics for *New World Man*.
+
+```{r echo=FALSE}
+lyrics_long %>%
+  filter(song == "New World Man") %>%
+  arrange(desc(topic_weight)) %>%
+  mutate(topic_weight = topic_weight * 100) %>%
+  head() %>%
+  select(topic_long, topic_weight) %>%
+  flextable::flextable() %>%
+  flextable::colformat_double(digits = 0, suffix = "%") %>%
+  flextable::autofit()
+```
+
+Topics usually make a negligible contribution to most songs, and a substantial contribution to a few songs.
+
+```{r fig.height=8, fig.width=6, echo=FALSE}
+p <- lyrics_long %>%
+  ggplot(aes(x = fct_rev(topic_long), y = topic_weight, color = writer,
+             text = glue("song: {song} <br>",
+                         "topic: {topic} <br>",
+                         "weight: {scales::percent(topic_weight, accuracy = 1)}"))) +
+  geom_point(alpha = .8) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_color_manual(values = writer_palette) +
+  coord_flip() +
+  theme_light() +
+  labs(
+    title = "Topics usually make up <10% of a song",
+    subtitle = "Song Weights for each topic.",
+    x = NULL, y = "Topic Weight")
+plotly::ggplotly(p, tooltip = "text")
+```
+
+Which writers were most similar? Topic weights for AC/DC were highly correlated with Roger Taylor, but negatively correlated with the other writers, especially Neil Peart. Peart was no correlated with anyone. The most similar writers were Brian May and Freddie Mercury. John Deacon was in between, correlated less strongly to both Mercury and May.
+
+```{r echo=FALSE}
+topic_importance <- lyrics_long %>%
+  group_by(writer, topic_long) %>%
+  summarize(
+    .groups = "drop",
+    songs = n(),
+    important = sum(topic_weight >= .25),
+    pct_import = important / songs)
+
+topic_importance %>% 
+  select(writer, topic_long, pct_import) %>%
+  pivot_wider(names_from = writer, values_from = pct_import) %>%
+  column_to_rownames(var = "topic_long") %>%
+  cor() %>%
+  corrplot::corrplot(type = "upper")
+```
+
+# Conclusions
+
+I was not surprised to find Neil Peart emerge as the most complex lyricist of the group. I expected Freddie Mercury to finish higher though. Peart also appears to have written about different topics than the others. You will not find a love song in the Rush corpus. But AC/DC also wrote on a variety of topics. And here I thought every AC/DC song was about rock or electricity (thun-der!). It was also encouraging to see Queen correlate highly with the band's members. The highest correlation for Queen was John Deacon, and Roger Taylor was actually somewhat negatively correlated with Queen collaborations. Given some space, Roger Taylor will probably come back with a song about rock or cars.
+
+One potential use of this sort of analysis is to create a song recommendation system. I used a *K* means cluster analysis to group similar songs. Like *Bohemian Rhapsody*? Here are some other lyrics you may enjoy!
+
+```{r echo=FALSE}
+lyrics_topics %>%
+  filter(cluster == 41) %>%
+  select(cluster, band, writer, song) %>%
+  arrange(cluster, band, writer, song) %>%
+  flextable::flextable() %>%
+  flextable::autofit()
+```

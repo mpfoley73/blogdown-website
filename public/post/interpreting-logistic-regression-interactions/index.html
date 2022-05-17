@@ -1,0 +1,1476 @@
+<!DOCTYPE HTML>
+
+<html>
+    <head>
+        <script type="application/ld+json">
+    {
+        "@context" : "http://schema.org",
+        "@type" : "BlogPosting",
+        "mainEntityOfPage": {
+             "@type": "WebPage",
+             "@id": "\/"
+        },
+        "articleSection" : "post",
+        "name" : "Interpreting Logistic Regression Interactions",
+        "headline" : "Interpreting Logistic Regression Interactions",
+        "description" : "Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is\n\\[y = \\mathrm{logit}(\\pi) = \\ln\\left(\\frac{\\pi}{1 - \\pi}\\right) = X\\beta\\]\nA \\(\\delta = x_1 - x_0\\) unit change in \\(x\\) in a estimated regression \\(\\hat{y} = X\\hat{\\beta}\\) is associated with a \\(\\delta\\hat{\\beta}\\) factor change in the log odds of \\(y\\). More commonly, you take the exponent of the coefficient estimate and say a \\(\\delta\\) unit change is associated with a \\(e^{\\delta\\hat{\\beta}}\\) factor change in the odds of \\(y\\) (see my handbook).",
+        "inLanguage" : "en",
+        "author" : "",
+        "creator" : "",
+        "publisher": "",
+        "accountablePerson" : "",
+        "copyrightHolder" : "",
+        "copyrightYear" : "2021",
+        "datePublished": "2021-08-15 00:00:00 \u002b0000 UTC",
+        "dateModified" : "2021-08-15 00:00:00 \u002b0000 UTC",
+        "url" : "\/post\/interpreting-logistic-regression-interactions\/",
+        "wordCount" : "4365",
+        "keywords" : [ "logistic","Blog" ]
+    }
+    </script>
+        
+            
+                <title>Interpreting Logistic Regression Interactions</title>
+            
+        
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="generator" content="Hugo 0.86.0" />
+        
+
+
+        
+            <meta name="author" content="Michael Foley">
+        
+        
+            
+                <meta name="description" content="HTML5 UP theme, Future Imperfect with some extra goodies, ported by Julio Pescador. Powered by Hugo">
+            
+        
+
+        <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Interpreting Logistic Regression Interactions"/>
+<meta name="twitter:description" content="Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is
+\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]
+A \(\delta = x_1 - x_0\) unit change in \(x\) in a estimated regression \(\hat{y} = X\hat{\beta}\) is associated with a \(\delta\hat{\beta}\) factor change in the log odds of \(y\). More commonly, you take the exponent of the coefficient estimate and say a \(\delta\) unit change is associated with a \(e^{\delta\hat{\beta}}\) factor change in the odds of \(y\) (see my handbook)."/>
+<meta name="twitter:site" content="@mpfoley73"/>
+
+        <meta property="og:title" content="Interpreting Logistic Regression Interactions" />
+<meta property="og:description" content="Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is
+\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]
+A \(\delta = x_1 - x_0\) unit change in \(x\) in a estimated regression \(\hat{y} = X\hat{\beta}\) is associated with a \(\delta\hat{\beta}\) factor change in the log odds of \(y\). More commonly, you take the exponent of the coefficient estimate and say a \(\delta\) unit change is associated with a \(e^{\delta\hat{\beta}}\) factor change in the odds of \(y\) (see my handbook)." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/interpreting-logistic-regression-interactions/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2021-08-15T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-08-15T00:00:00+00:00" />
+
+
+        <meta property="og:image" content="//images/logo.png">
+        <meta property="og:image:type" content="image/png">
+        <meta property="og:image:width" content="512">
+        <meta property="og:image:height" content="512">
+        <meta itemprop="name" content="Interpreting Logistic Regression Interactions">
+<meta itemprop="description" content="Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is
+\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]
+A \(\delta = x_1 - x_0\) unit change in \(x\) in a estimated regression \(\hat{y} = X\hat{\beta}\) is associated with a \(\delta\hat{\beta}\) factor change in the log odds of \(y\). More commonly, you take the exponent of the coefficient estimate and say a \(\delta\) unit change is associated with a \(e^{\delta\hat{\beta}}\) factor change in the odds of \(y\) (see my handbook)."><meta itemprop="datePublished" content="2021-08-15T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2021-08-15T00:00:00+00:00" />
+<meta itemprop="wordCount" content="4365">
+<meta itemprop="keywords" content="logistic," />
+        
+
+        
+            
+        
+
+        
+        
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:400,800,900|Source+Sans+Pro:400,700">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.1.25/jquery.fancybox.min.css">
+            <link rel="stylesheet" href="/css/main.css">
+            <link rel="stylesheet" href="/css/add-on.css">
+            <link rel="stylesheet" href="/css/academicons.min.css">
+        
+
+        
+            
+                
+            
+        
+
+
+  
+    
+    <link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+  
+
+
+      
+    </head>
+    <body>
+
+      
+      <div id="wrapper">
+
+    
+    
+<header id="header">
+    
+      <h1><a href="/">post</a></h1>
+    
+
+    <nav class="links">
+        <ul>
+            
+                <li>
+                    <a href="/">
+                            <i class="fa fa-home">&nbsp;</i>Home
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/about/">
+                            <i class="fa fa-id-card-o">&nbsp;</i>About
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/blog/">
+                            <i class="fa fa-newspaper-o">&nbsp;</i>Blog
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/itemized/">
+                            <i class="fa fa-list">&nbsp;</i>Itemized
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/categories/">
+                            <i class="fa fa-sitemap">&nbsp;</i>Categories
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/contact/">
+                            <i class="fa fa-envelope-o">&nbsp;</i>Contact
+                    </a>
+                </li>
+            
+        </ul>
+    </nav>
+    <nav class="main">
+        <ul>
+            
+            <li id="share-nav" class="share-menu" style="display:none;">
+                <a class="fa-share-alt" href="#share-menu">Share</a>
+            </li>
+            
+            <li class="search">
+                <a class="fa-search" href="#search">Search</a>
+                <form id="search" method="get" action="//google.com/search">
+                    <input type="text" name="q" placeholder="Search" />
+                    <input type="hidden" name="as_sitesearch" value="/">
+                </form>
+            </li>
+            <li class="menu">
+                <a class="fa-bars" href="#menu">Menu</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+
+<section id="menu">
+
+    
+        <section>
+            <form class="search" method="get" action="//google.com/search">
+                <input type="text" name="q" placeholder="Search" />
+                <input type="hidden" name="as_sitesearch" value="/">
+            </form>
+        </section>
+
+    
+        <section>
+            <ul class="links">
+                
+                    <li>
+                        <a href="/">
+                            <h3>
+                                <i class="fa fa-home">&nbsp;</i>Home
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/about/">
+                            <h3>
+                                <i class="fa fa-id-card-o">&nbsp;</i>About
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/blog/">
+                            <h3>
+                                <i class="fa fa-newspaper-o">&nbsp;</i>Blog
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/itemized/">
+                            <h3>
+                                <i class="fa fa-list">&nbsp;</i>Itemized
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/">
+                            <h3>
+                                <i class="fa fa-sitemap">&nbsp;</i>Categories
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/contact/">
+                            <h3>
+                                <i class="fa fa-envelope-o">&nbsp;</i>Contact
+                            </h3>
+                        </a>
+                    </li>
+                
+            </ul>
+        </section>
+
+    
+        <section class="recent-posts">
+            <div class="mini-posts">
+                <header>
+                    <h3>Recent Posts</h3>
+                </header>
+                
+
+                
+                    
+                
+
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/">Post</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-05-02'>
+                                    May 2, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/2022-05-02-using-custom-fonts-in-r/">Using Custom Fonts in R</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-05-02'>
+                                    May 2, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/married-career-women-struggling-more-with-work-life-balance/">Married Career Women Struggling More with Work-Life Balance</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-02-10'>
+                                    February 10, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/cultural-origins-less-important-to-whites/">Cultural Origins Less Important to White Adults</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2022-01-17'>
+                                    January 17, 2022</time>
+                            </header>
+                            
+
+                        </article>
+                
+                        <article class="mini-post">
+                            <header>
+                                <h3><a href="/post/ohio-employment/">Ohio Employment</a></h3>
+                                
+                                <time class="published" datetime=
+                                    '2021-11-20'>
+                                    November 20, 2021</time>
+                            </header>
+                            
+
+                        </article>
+                
+
+                
+                    <a href=
+                        
+                            /blog/
+                        
+                        class="button">View more posts</a>
+                
+            </div>
+        </section>
+
+    
+        
+</section>
+
+    <section id="share-menu">
+    <section id="social-share-nav">
+        <ul class="links">
+            <header>
+                <h3>Share this post <i class="fa fa-smile-o"></i></h3>
+            </header>
+            
+
+
+
+<li>
+  <a href="//twitter.com/share?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;text=Interpreting%20Logistic%20Regression%20Interactions&amp;via=mpfoley73" target="_blank" class="share-btn twitter">
+    <i class="fa fa-twitter"></i>
+    <p>Twitter</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//plus.google.com/share?url=%2fpost%2finterpreting-logistic-regression-interactions%2f" target="_blank" class="share-btn google-plus">
+    <i class="fa fa-google-plus"></i>
+    <p>Google+</p>
+  </a>
+</li>
+
+
+
+
+
+<li>
+  <a href="//www.facebook.com/sharer/sharer.php?u=%2fpost%2finterpreting-logistic-regression-interactions%2f" target="_blank" class="share-btn facebook">
+    <i class="fa fa-facebook"></i>
+    <p>Facebook</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//reddit.com/submit?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;title=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn reddit">
+    <i class="fa fa-reddit-alien"></i>
+    <p>Reddit</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.linkedin.com/shareArticle?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;title=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn linkedin">
+      <i class="fa fa-linkedin"></i>
+      <p>LinkedIn</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.stumbleupon.com/submit?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;title=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn stumbleupon">
+    <i class="fa fa-stumbleupon"></i>
+    <p>StumbleUpon</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.pinterest.com/pin/create/button/?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;description=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn pinterest">
+    <i class="fa fa-pinterest-p"></i>
+    <p>Pinterest</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="mailto:?subject=Check out this post by Michael%20Foley&amp;body=%2fpost%2finterpreting-logistic-regression-interactions%2f" target="_blank" class="share-btn email">
+    <i class="fa fa-envelope"></i>
+    <p>Email</p>
+  </a>
+</li>
+
+
+        </ul>
+    </section>
+</section>
+
+    
+    <div id="main">
+        
+        
+        <article class="post">
+  <header>
+    <div class="title">
+        
+            <h1><a href="/post/interpreting-logistic-regression-interactions/">Interpreting Logistic Regression Interactions</a></h1>
+            
+        
+        
+    </div>
+    <div class="meta">
+        
+
+        <time class="published"
+            datetime='2021-08-15'>
+            August 15, 2021</time>
+        <span class="author">Michael Foley</span>
+        
+            <p>21 minute read</p>
+        
+        
+    </div>
+</header>
+
+
+  
+    <section id="social-share">
+      <ul class="icons">
+        
+
+
+
+<li>
+  <a href="//twitter.com/share?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;text=Interpreting%20Logistic%20Regression%20Interactions&amp;via=mpfoley73" target="_blank" class="share-btn twitter">
+    <i class="fa fa-twitter"></i>
+    <p>Twitter</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//plus.google.com/share?url=%2fpost%2finterpreting-logistic-regression-interactions%2f" target="_blank" class="share-btn google-plus">
+    <i class="fa fa-google-plus"></i>
+    <p>Google+</p>
+  </a>
+</li>
+
+
+
+
+
+<li>
+  <a href="//www.facebook.com/sharer/sharer.php?u=%2fpost%2finterpreting-logistic-regression-interactions%2f" target="_blank" class="share-btn facebook">
+    <i class="fa fa-facebook"></i>
+    <p>Facebook</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//reddit.com/submit?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;title=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn reddit">
+    <i class="fa fa-reddit-alien"></i>
+    <p>Reddit</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.linkedin.com/shareArticle?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;title=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn linkedin">
+      <i class="fa fa-linkedin"></i>
+      <p>LinkedIn</p>
+    </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.stumbleupon.com/submit?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;title=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn stumbleupon">
+    <i class="fa fa-stumbleupon"></i>
+    <p>StumbleUpon</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="//www.pinterest.com/pin/create/button/?url=%2fpost%2finterpreting-logistic-regression-interactions%2f&amp;description=Interpreting%20Logistic%20Regression%20Interactions" target="_blank" class="share-btn pinterest">
+    <i class="fa fa-pinterest-p"></i>
+    <p>Pinterest</p>
+  </a>
+</li>
+
+
+
+
+<li>
+  <a href="mailto:?subject=Check out this post by Michael%20Foley&amp;body=%2fpost%2finterpreting-logistic-regression-interactions%2f" target="_blank" class="share-btn email">
+    <i class="fa fa-envelope"></i>
+    <p>Email</p>
+  </a>
+</li>
+
+
+      </ul>
+    </section>
+  
+
+  
+
+  <div id="content">
+    
+<script src="/post/interpreting-logistic-regression-interactions/index_files/header-attrs/header-attrs.js"></script>
+<link href="/post/interpreting-logistic-regression-interactions/index_files/tabwid/tabwid.css" rel="stylesheet" />
+
+
+<p>Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is</p>
+<p><span class="math display">\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]</span></p>
+<p>A <span class="math inline">\(\delta = x_1 - x_0\)</span> unit change in <span class="math inline">\(x\)</span> in a estimated regression <span class="math inline">\(\hat{y} = X\hat{\beta}\)</span> is associated with a <span class="math inline">\(\delta\hat{\beta}\)</span> factor change in the <em>log odds</em> of <span class="math inline">\(y\)</span>. More commonly, you take the exponent of the coefficient estimate and say a <span class="math inline">\(\delta\)</span> unit change is associated with a <span class="math inline">\(e^{\delta\hat{\beta}}\)</span> factor change in the <em>odds</em> of <span class="math inline">\(y\)</span> (see my <a href="https://bookdown.org/mpfoley1973/supervised-ml/">handbook</a>). The factor change in the odds, <span class="math inline">\(y^{&#39;} = y \cdot e^{\delta \hat{\beta}}\)</span>, means <span class="math inline">\(e^{\delta\hat{\beta}}\)</span> is the <em>odds ratio</em> relative to the reference level of the predictor variable. How does this change when there are interaction terms? I’m going to tackle that here.</p>
+<p>Here’s the game plan. Base R dataset <code>esoph</code> has cancer diagnoses and several categorical predictor variables. We’ll <em>manually</em> calculate the cancer odds for each combination of predictors and combine them into odds ratios, then show how those same values flow from a fitted logistic regression model.</p>
+<div id="odds-and-odds-ratios" class="section level2">
+<h2>Odds and Odds Ratios</h2>
+<p>The <code>esoph</code> dataset is a count of cancer cases in a <a href="https://pubmed.ncbi.nlm.nih.gov/28846237/">case-control study</a>. Column <code>ncases</code> is a count of positive diagnoses and <code>ncontrols</code> is a count of negative diagnoses. The dataset has three explanatory variables, but to keep this simple, I’ll narrow the set to one age group, three levels of explanatory variable alcohol consumption (<code>alcgp</code>) and two levels of tobacco consumption (<code>tobgp</code>).</p>
+<pre class="r"><code>library(tidyverse)
+
+dat &lt;- esoph %&gt;%
+  filter(agegp == &quot;65-74&quot;) %&gt;%
+  mutate(alc = factor(alcgp, ordered = FALSE),
+         alc = fct_collapse(alc, 
+                            &quot;L&quot; = &quot;0-39g/day&quot;, 
+                            &quot;M&quot; = &quot;40-79&quot;, 
+                            &quot;H&quot; = &quot;80-119&quot;, &quot;H&quot; = &quot;120+&quot;),
+         tob = factor(tobgp, ordered = FALSE),
+         tob = fct_collapse(tob, 
+                            &quot;L&quot; = &quot;0-9g/day&quot;, 
+                            &quot;H&quot; = c(&quot;10-19&quot;, &quot;20-29&quot;, &quot;30+&quot;))) %&gt;%
+  group_by(alc, tob) %&gt;%
+  summarize(.groups = &quot;drop&quot;, 
+            ncases = sum(ncases), 
+            ncontrols = sum(ncontrols))
+
+dat
+## # A tibble: 6 x 4
+##   alc   tob   ncases ncontrols
+##   &lt;fct&gt; &lt;fct&gt;  &lt;dbl&gt;     &lt;dbl&gt;
+## 1 L     L          5        43
+## 2 L     H          6        17
+## 3 M     L         17        17
+## 4 M     H          8        11
+## 5 H     L          9         8
+## 6 H     H         10        10</code></pre>
+<p>The cancer odds is the ratio of the probability of a positive diagnosis to the probability of a negative diagnosis, which given the common denominator is just the ratio of counts.</p>
+<p><span class="math display">\[odds = \frac{\pi_+}{\pi_-} = \frac{\mathrm{ncases / n}}{\mathrm{ncontrols / n}} = \frac{\mathrm{ncases}}{\mathrm{ncontrols}}\]</span></p>
+<pre class="r"><code>dat &lt;- dat %&gt;%
+  mutate(odds = ncases / ncontrols)
+
+dat %&gt;% 
+  ggplot(aes(x = tob, y = odds, color = alc, group = alc)) +
+  geom_point(stat = &quot;summary&quot;, fun = sum) +
+  stat_summary(fun = sum, geom=&quot;line&quot;) +
+  geom_label(aes(label = scales::number(odds, accuracy = .001))) +
+  labs(title = &quot;Alcohol moderates effect of tobacco on cancer odds.&quot;) +
+  theme_light()</code></pre>
+<p><img src="/post/interpreting-logistic-regression-interactions/index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>The figure above shows how cancer odds increase with tobacco use and with alcohol consumption, but their effects vary by their combination. If tobacco and alcohol had independent effects on cancer, you’d see parallel lines. Instead, we say alcohol “moderates” the effect of tobacco on cancer risk, and vice-versa.</p>
+<p>You can combine these six combinations of alcohol and tobacco into odds ratios (OR). There are 6x6=36 possible ORs. In my experience, I’ve only cared about comparisons to the reference group. From the data frame definition, we’ve chosen <code>tob</code> = “L” and <code>alc</code> = “L” as the reference group. Its the top row in Table 1.</p>
+<pre class="r"><code>odds_ratios &lt;- merge(dat, dat, by = NULL) %&gt;%
+  mutate(odds_1_lbl = paste0(&quot;alc&quot;, alc.x, &quot;tob&quot;, tob.x),
+         odds_2_lbl = paste0(&quot;alc&quot;, alc.y, &quot;tob&quot;, tob.y),
+         odds_ratio_lbl = paste(odds_1_lbl, odds_2_lbl, sep = &quot;:&quot;),
+         OR = odds.x / odds.y) %&gt;%
+  select(odds_1_lbl, odds_2_lbl, odds_ratio_lbl, odds_1 = odds.x, odds_2 = odds.y, OR)
+
+odds_ratios %&gt;% 
+  mutate(odds_1 = scales::number(odds_1, accuracy = .001),
+         odds_2 = scales::number(odds_2, accuracy = .001),
+         OR = scales::number(OR, accuracy = .001),
+         ` ` = paste(odds_1_lbl, odds_1)) %&gt;%
+  select(-c(odds_ratio_lbl, odds_1_lbl, odds_1)) %&gt;%
+  pivot_wider(names_from = c(odds_2_lbl, odds_2), values_from = OR, names_sep = &quot;\n&quot;) %&gt;%
+  flextable::flextable() %&gt;%
+  flextable::set_caption(&quot;36 possible odds ratios formed from 6 odds.&quot;) %&gt;%
+  flextable::theme_vanilla() %&gt;%
+  flextable::border(j = 1, border.right = officer::fp_border()) %&gt;%
+  flextable::bold(j = 1) %&gt;%
+  flextable::autofit()</code></pre>
+<template id="6465f310-f634-431a-a772-e3b334321195"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+</style><div class="tabwid"><style>.cl-94931678{}.cl-948297f8{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-948297f9{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-9482bee0{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-94830cb0{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb1{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb2{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb3{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb4{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb5{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb6{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb7{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb8{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cb9{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94830cba{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a2{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a3{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a4{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a5{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a6{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a7{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a8{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333a9{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333aa{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333ab{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-948333ac{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834720{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834721{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834722{width:100.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834723{width:102.1pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834724{width:105.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834725{width:103.4pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834726{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94834727{width:104.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class='cl-94931678'>
+<caption class="Table Caption">
+<span id="tab:unnamed-chunk-3">Table 1: </span>36 possible odds ratios formed from 6 odds.
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-94834722"><p class="cl-9482bee0"><span class="cl-948297f8"> </span></p></td><td class="cl-94834723"><p class="cl-9482bee0"><span class="cl-948297f8">alcLtobL<br>0.116</span></p></td><td class="cl-94834725"><p class="cl-9482bee0"><span class="cl-948297f8">alcLtobH<br>0.353</span></p></td><td class="cl-94834726"><p class="cl-9482bee0"><span class="cl-948297f8">alcMtobL<br>1.000</span></p></td><td class="cl-94834724"><p class="cl-9482bee0"><span class="cl-948297f8">alcMtobH<br>0.727</span></p></td><td class="cl-94834725"><p class="cl-9482bee0"><span class="cl-948297f8">alcHtobL<br>1.125</span></p></td><td class="cl-94834727"><p class="cl-9482bee0"><span class="cl-948297f8">alcHtobH<br>1.000</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-94830cb3"><p class="cl-9482bee0"><span class="cl-948297f8">alcLtobL 0.116</span></p></td><td class="cl-94830cb2"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td><td class="cl-94830cb0"><p class="cl-9482bee0"><span class="cl-948297f9">0.329</span></p></td><td class="cl-94830cb4"><p class="cl-9482bee0"><span class="cl-948297f9">0.116</span></p></td><td class="cl-94830cb5"><p class="cl-9482bee0"><span class="cl-948297f9">0.160</span></p></td><td class="cl-94830cb0"><p class="cl-9482bee0"><span class="cl-948297f9">0.103</span></p></td><td class="cl-94830cb1"><p class="cl-9482bee0"><span class="cl-948297f9">0.116</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94830cb8"><p class="cl-9482bee0"><span class="cl-948297f8">alcLtobH 0.353</span></p></td><td class="cl-948333a2"><p class="cl-9482bee0"><span class="cl-948297f9">3.035</span></p></td><td class="cl-94830cba"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td><td class="cl-94830cb7"><p class="cl-9482bee0"><span class="cl-948297f9">0.353</span></p></td><td class="cl-94830cb6"><p class="cl-9482bee0"><span class="cl-948297f9">0.485</span></p></td><td class="cl-94830cba"><p class="cl-9482bee0"><span class="cl-948297f9">0.314</span></p></td><td class="cl-94830cb9"><p class="cl-9482bee0"><span class="cl-948297f9">0.353</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94830cb8"><p class="cl-9482bee0"><span class="cl-948297f8">alcMtobL 1.000</span></p></td><td class="cl-948333a2"><p class="cl-9482bee0"><span class="cl-948297f9">8.600</span></p></td><td class="cl-94830cba"><p class="cl-9482bee0"><span class="cl-948297f9">2.833</span></p></td><td class="cl-94830cb7"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td><td class="cl-94830cb6"><p class="cl-9482bee0"><span class="cl-948297f9">1.375</span></p></td><td class="cl-94830cba"><p class="cl-9482bee0"><span class="cl-948297f9">0.889</span></p></td><td class="cl-94830cb9"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-948333a6"><p class="cl-9482bee0"><span class="cl-948297f8">alcMtobH 0.727</span></p></td><td class="cl-948333a3"><p class="cl-9482bee0"><span class="cl-948297f9">6.255</span></p></td><td class="cl-948333a4"><p class="cl-9482bee0"><span class="cl-948297f9">2.061</span></p></td><td class="cl-948333a5"><p class="cl-9482bee0"><span class="cl-948297f9">0.727</span></p></td><td class="cl-948333a8"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td><td class="cl-948333a4"><p class="cl-9482bee0"><span class="cl-948297f9">0.646</span></p></td><td class="cl-948333a7"><p class="cl-9482bee0"><span class="cl-948297f9">0.727</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94830cb8"><p class="cl-9482bee0"><span class="cl-948297f8">alcHtobL 1.125</span></p></td><td class="cl-948333a2"><p class="cl-9482bee0"><span class="cl-948297f9">9.675</span></p></td><td class="cl-94830cba"><p class="cl-9482bee0"><span class="cl-948297f9">3.188</span></p></td><td class="cl-94830cb7"><p class="cl-9482bee0"><span class="cl-948297f9">1.125</span></p></td><td class="cl-94830cb6"><p class="cl-9482bee0"><span class="cl-948297f9">1.547</span></p></td><td class="cl-94830cba"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td><td class="cl-94830cb9"><p class="cl-9482bee0"><span class="cl-948297f9">1.125</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94834721"><p class="cl-9482bee0"><span class="cl-948297f8">alcHtobH 1.000</span></p></td><td class="cl-948333aa"><p class="cl-9482bee0"><span class="cl-948297f9">8.600</span></p></td><td class="cl-948333ac"><p class="cl-9482bee0"><span class="cl-948297f9">2.833</span></p></td><td class="cl-948333ab"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td><td class="cl-94834720"><p class="cl-9482bee0"><span class="cl-948297f9">1.375</span></p></td><td class="cl-948333ac"><p class="cl-9482bee0"><span class="cl-948297f9">0.889</span></p></td><td class="cl-948333a9"><p class="cl-9482bee0"><span class="cl-948297f9">1.000</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="74331cb6-ac31-44ed-98d6-6a2840905603"></div>
+<script>
+var dest = document.getElementById("74331cb6-ac31-44ed-98d6-6a2840905603");
+var template = document.getElementById("6465f310-f634-431a-a772-e3b334321195");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+</div>
+<div id="logistic-regression-model" class="section level2">
+<h2>Logistic Regression Model</h2>
+<p>Recall that a logistic regression fits the <em>log odds</em> of the response variable to the predictor variables. In the equation below, <span class="math inline">\(\pi\)</span> is the event probability (in this case, a cancer diagnosis).</p>
+<p><span class="math display">\[y = \mathrm{logit(\pi)} = \ln\left(\frac{\pi}{1-\pi}\right) = X\beta\]</span></p>
+<p>Our data set is summarized so that <code>ncases</code> and <code>ncontrols</code> combine to specify the binary response to the predictor combinations (see <code>?glm()</code>). Let’s model the log-odds of cancer as a function of alcohol and tobacco consumption, including their interaction.</p>
+<pre class="r"><code>mdl &lt;- glm(cbind(ncases, ncontrols) ~ alc*tob, data = dat, 
+           family = binomial())
+
+broom::tidy(mdl)
+## # A tibble: 6 x 5
+##   term        estimate std.error statistic    p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 (Intercept)    -2.15     0.472     -4.55 0.00000526
+## 2 alcM            2.15     0.584      3.69 0.000228  
+## 3 alcH            2.27     0.678      3.35 0.000812  
+## 4 tobH            1.11     0.670      1.66 0.0974    
+## 5 alcM:tobH      -1.43     0.884     -1.62 0.106     
+## 6 alcH:tobH      -1.23     0.941     -1.31 0.192</code></pre>
+<p>The intercept term, -2.152, is the log odds of a positive cancer diagnosis for the reference group (<code>tob</code> = “L” and <code>alc</code> = “L”). The <em>p</em>-value is &lt;.0001, so it is significantly different from 0. Its exponential, 0.116, equals <span class="math inline">\(e^\hat{Y}\)</span>, the <em>odds</em> of a positive cancer diagnosis for the reference group. That means a <code>tob</code> = “L”, <code>alc</code> = “L” person has an expected <em>probability</em> of cancer of <span class="math inline">\(e^\hat{Y} / (1 + e^\hat{Y}) =\)</span> 10.4% (inverse logit formula).</p>
+<p>The interpretation of the coefficient estimators, <span class="math inline">\(\hat{\beta}\)</span>, is “a <span class="math inline">\(\delta\)</span> change in <em>x</em> is associated with a <span class="math inline">\(\delta\hat{\beta}\)</span> change in the log-odds of <em>y</em>.” A difference in logs is the same as the log of their ratio, so you can express the change as a ratio.</p>
+<p><span class="math display">\[\begin{eqnarray}
+\delta\beta &amp;=&amp; \log(\pi / (1-\pi))|_{X_1} - \log(\pi / (1-\pi))|_{X_0}\\
+ &amp;=&amp; \log\left[\frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}}\right]
+\end{eqnarray}\]</span></p>
+<p>A <span class="math inline">\(\delta = 1\)</span> unit increase in <code>tobH</code> from 0 to 1 (from “L” to “H”) is associated with a 1.11 increase in the log-odds of cancer for a low-alcohol (<code>alc</code> = “L”) user. Log-odds are abstract, but since we can express the change in log-odds as the log of a ratio, we can take the exponential.</p>
+<p><span class="math display">\[e^{\delta\beta} = \frac{\pi / (1-\pi)|_{X_1}}{\pi / (1-\pi)|_{X_0}} = \mathrm{OR}\]</span></p>
+<p>The exponentiated coefficient estimators equal the ratio of the odds after and before the change. I.e., they are odds ratios. A <span class="math inline">\(\delta\)</span> unit change in <em>x</em> is associated with a factor <span class="math inline">\(e^{\delta\hat{\beta}}\)</span> change in the <em>odds</em> of <em>y</em>.</p>
+<pre class="r"><code>broom::tidy(mdl, exponentiate = TRUE)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   term        estimate std.error statistic    p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 (Intercept)    0.116     0.472     -4.55 0.00000526
+## 2 alcM           8.60      0.584      3.69 0.000228  
+## 3 alcH           9.67      0.678      3.35 0.000812  
+## 4 tobH           3.04      0.670      1.66 0.0974    
+## 5 alcM:tobH      0.240     0.884     -1.62 0.106     
+## 6 alcH:tobH      0.293     0.941     -1.31 0.192</code></pre>
+<p>We’ve just seen that the exponential of the intercept, <code>exp(tobH) =</code> 0.116, is the odds of a positive cancer diagnosis for the reference group (<code>alc</code> = <em>L</em>, <code>tob</code> = <em>L</em>). Now look at the three main-effects terms, <code>alcM</code>, <code>alcH</code>, and <code>tobH</code>. These terms are the expected change in the log odds of a positive cancer diagnosis associated with a <span class="math inline">\(\delta = 1\)</span> unit change in the variable <em>holding the other variable at the reference level</em>. E.g., <code>alcM</code> is the change in the log odds associated with a <code>tob</code> = <em>L</em> person changing from <code>alc</code> = <em>L</em> to <code>alc</code> = <em>M</em>. The log of a difference equals the ratio of the logs (basic math), so the <em>exponential</em> of the <code>alcM</code>, <code>alcH</code>, and <code>tobH</code> is the ratio of the <em>odds</em>, the <em>odds ratio</em> (OR).</p>
+<ul>
+<li><code>alcM =</code> 8.60 is the odds of a positive diagnosis for <code>alc</code> = <em>M</em>, <code>tob</code> = <em>L</em> over the odds of a positive diagnosis for <code>alc</code> = <em>L</em> <code>tob</code> = <em>L</em>.<br />
+</li>
+<li><code>alcH =</code> 9.67 is the odds of a positive diagnosis for <code>alc</code> = <em>H</em>, <code>tob</code> = <em>L</em> over the odds of a positive diagnosis for <code>alc</code> = <em>L</em> <code>tob</code> = <em>L</em>.<br />
+</li>
+<li><code>tobH =</code> 3.04 is the odds of a positive diagnosis for <code>alcL</code> = <em>L</em>, <code>tob</code> = <em>H</em> over the odds of a positive diagnosis for <code>alc</code> = <em>L</em> <code>tob</code> = <em>L</em>.</li>
+</ul>
+</div>
+<div id="interaction-effects" class="section level2">
+<h2>Interaction Effects</h2>
+<p>Now we’re ready to tackle the interaction terms. The interaction terms measure the incremental change in the odds when you hold the other variable fixed at a different level. E.g., when estimating the change in the log odds of a positive diagnosis associated with a change from <code>alc</code> = <em>L</em> to <code>alc</code> = <em>M</em>, <code>alcM:tobH</code> is the adjustment associated with using a reference level <code>tob</code> = <em>H</em> instead of <code>tob</code> = <em>H</em>.</p>
+<ul>
+<li><code>alcM * alcM:tobH</code> = 8.60 * 0.24 = 2.06 is the odds of a positive diagnosis for <code>alc</code> = <em>M</em>, <code>tob</code> = <em>H</em> over <code>alc</code> = <em>L</em> <code>tob</code> = <em>H</em>.</li>
+<li><code>tobH * alcM:tobH</code> = 3.04 * 0.24 = 0.73 is the odds of a positive diagnosis for <code>alc</code> = <em>M</em>, <code>tob</code> = <em>H</em> over <code>alc</code> = <em>M</em> <code>tob</code> = <em>L</em>.</li>
+<li><code>alcH * alcH:tobH</code> = 9.67 * 0.29 = 2.83 is the odds of a positive diagnosis for <code>alc</code> = <em>H</em>, <code>tob</code> = <em>H</em> over <code>alc</code> = <em>L</em> <code>tob</code> = <em>H</em>.</li>
+<li><code>tobH * alcH:tobH</code> = 3.04 * 0.29 = 0.89 is the odds of a positive diagnosis for <code>alc</code> = <em>H</em>, <code>tob</code> = <em>H</em> over <code>alc</code> = <em>H</em> <code>tob</code> = <em>L</em>.</li>
+</ul>
+<p>But wait - there’s two more odds ratios we can estimate! The effects are multiplicative, so we can calculate the odds ratios of changing both <code>alc</code> and <code>tob</code> vs the reference group.</p>
+<ul>
+<li><code>alcM * tobH * alcM:tobH</code> = 8.60 * 3.04 * 0.24 = 6.25 is the odds of a positive diagnosis for <code>alc</code> = <em>M</em>, <code>tob</code> = <em>H</em> over <code>alc</code> = <em>L</em> <code>tob</code> = <em>L</em>.</li>
+<li><code>alcH * tobH * alcH:tobH</code> = 9.67 * 3.04 * 0.29 = 8.60 is the odds of a positive diagnosis for <code>alc</code> = <em>H</em>, <code>tob</code> = <em>H</em> over <code>alc</code> = <em>L</em> <code>tob</code> = <em>L</em>.</li>
+</ul>
+<p>If you are following along, you see we’ve calculated 7 of the odds ratios from Table 1. In fact, you can calculate all 36 odds ratios through combinations of main effects and interaction effects.</p>
+<pre class="r"><code>alcLtobL = exp(coef(mdl)[&quot;(Intercept)&quot;])
+alcLtobH = exp(coef(mdl)[&quot;tobH&quot;])
+alcMtobL = exp(coef(mdl)[&quot;alcM&quot;])
+alcMtobH = exp(coef(mdl)[&quot;alcM&quot;]) * exp(coef(mdl)[&quot;tobH&quot;]) * exp(coef(mdl)[&quot;alcM:tobH&quot;])
+alcHtobL = exp(coef(mdl)[&quot;alcH&quot;])
+alcHtobH = exp(coef(mdl)[&quot;alcH&quot;]) * exp(coef(mdl)[&quot;tobH&quot;]) * exp(coef(mdl)[&quot;alcH:tobH&quot;])
+tribble(
+  ~num, ~den, ~OR,
+  &quot;alcLtobL&quot;, &quot;1&quot;, alcLtobL,
+  &quot;alcLtobH&quot;, &quot;1&quot;, alcLtobL * alcLtobH,
+  &quot;alcMtobL&quot;, &quot;1&quot;, alcLtobL * alcMtobL,
+  &quot;alcMtobH&quot;, &quot;1&quot;, alcLtobL * alcMtobH,
+  &quot;alcHtobL&quot;, &quot;1&quot;, alcLtobL * alcHtobL,
+  &quot;alcHtobH&quot;, &quot;1&quot;, alcLtobL * alcHtobH,
+  &quot;alcLtobL&quot;, &quot;alcLtobL&quot;, exp(coef(mdl)[&quot;(Intercept)&quot;]) / exp(coef(mdl)[&quot;(Intercept)&quot;]),
+  &quot;alcLtobH&quot;, &quot;alcLtobL&quot;, alcLtobH,
+  &quot;alcMtobL&quot;, &quot;alcLtobL&quot;, alcMtobL,
+  &quot;alcMtobH&quot;, &quot;alcLtobL&quot;, alcMtobH,
+  &quot;alcHtobL&quot;, &quot;alcLtobL&quot;, alcHtobL,
+  &quot;alcHtobH&quot;, &quot;alcLtobL&quot;, alcHtobH,
+  &quot;alcLtobL&quot;, &quot;alcLtobH&quot;, 1 / alcLtobH,
+  &quot;alcLtobH&quot;, &quot;alcLtobH&quot;, alcLtobH / alcLtobH,
+  &quot;alcMtobL&quot;, &quot;alcLtobH&quot;, alcMtobL / alcLtobH,
+  &quot;alcMtobH&quot;, &quot;alcLtobH&quot;, alcMtobH / alcLtobH,
+  &quot;alcHtobL&quot;, &quot;alcLtobH&quot;, alcHtobL / alcLtobH,
+  &quot;alcHtobH&quot;, &quot;alcLtobH&quot;, alcHtobH / alcLtobH,
+  &quot;alcLtobL&quot;, &quot;alcMtobL&quot;, 1 / alcMtobL,
+  &quot;alcLtobH&quot;, &quot;alcMtobL&quot;, alcLtobH / alcMtobL,
+  &quot;alcMtobL&quot;, &quot;alcMtobL&quot;, alcMtobL / alcMtobL,
+  &quot;alcMtobH&quot;, &quot;alcMtobL&quot;, alcMtobH / alcMtobL,
+  &quot;alcHtobL&quot;, &quot;alcMtobL&quot;, alcHtobL / alcMtobL,
+  &quot;alcHtobH&quot;, &quot;alcMtobL&quot;, alcHtobH / alcMtobL,
+  &quot;alcLtobL&quot;, &quot;alcMtobH&quot;, 1 / alcMtobH,
+  &quot;alcLtobH&quot;, &quot;alcMtobH&quot;, alcLtobH / alcMtobH,
+  &quot;alcMtobL&quot;, &quot;alcMtobH&quot;, alcMtobL / alcMtobH,
+  &quot;alcMtobH&quot;, &quot;alcMtobH&quot;, alcMtobH / alcMtobH,
+  &quot;alcHtobL&quot;, &quot;alcMtobH&quot;, alcHtobL / alcMtobH,
+  &quot;alcHtobH&quot;, &quot;alcMtobH&quot;, alcHtobH / alcMtobH,
+  &quot;alcLtobL&quot;, &quot;alcHtobL&quot;, 1 / alcHtobL,
+  &quot;alcLtobH&quot;, &quot;alcHtobL&quot;, alcLtobH / alcHtobL,
+  &quot;alcMtobL&quot;, &quot;alcHtobL&quot;, alcMtobL / alcHtobL,
+  &quot;alcMtobH&quot;, &quot;alcHtobL&quot;, alcMtobH / alcHtobL,
+  &quot;alcHtobL&quot;, &quot;alcHtobL&quot;, alcHtobL / alcHtobL,
+  &quot;alcHtobH&quot;, &quot;alcHtobL&quot;, alcHtobH / alcHtobL,
+  &quot;alcLtobL&quot;, &quot;alcHtobH&quot;, 1 / alcMtobH,
+  &quot;alcLtobH&quot;, &quot;alcHtobH&quot;, alcLtobH / alcHtobH,
+  &quot;alcMtobL&quot;, &quot;alcHtobH&quot;, alcMtobL / alcHtobH,
+  &quot;alcMtobH&quot;, &quot;alcHtobH&quot;, alcMtobH / alcHtobH,
+  &quot;alcHtobL&quot;, &quot;alcHtobH&quot;, alcHtobL / alcHtobH,
+  &quot;alcHtobH&quot;, &quot;alcHtobH&quot;, alcHtobH / alcHtobH
+) %&gt;%
+  pivot_wider(names_from = num, values_from = OR) %&gt;%
+  flextable::flextable() %&gt;%
+  flextable::set_caption(&quot;Odds ratios calculated from regression coefficients.&quot;) %&gt;%
+  flextable::theme_vanilla() %&gt;%
+  flextable::border(j = 1, border.right = officer::fp_border()) %&gt;%
+  flextable::bold(j = 1) %&gt;%
+  flextable::colformat_double(digits = 3) %&gt;%
+  flextable::autofit()</code></pre>
+<template id="177ed095-b3ee-4734-8488-fba6f2475ec7"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+</style><div class="tabwid"><style>.cl-94d68106{}.cl-94cedb86{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-94cedb87{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-94cedb88{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-94cedb89{margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-94cedb8a{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94cedb8b{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94cedb8c{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94cedb8d{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94cedb8e{width:67.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94cedb8f{width:66.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94cedb90{width:66.4pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f34e{width:67.6pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f34f{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f350{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f351{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f352{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 0.5pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f353{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f354{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f355{width:67.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f356{width:66.4pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f357{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 1pt solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0f358{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0fe7a{width:67.6pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0fe7b{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0fe7c{width:66.4pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0fe7d{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0fe7e{width:68.8pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-94d0fe7f{width:70pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class='cl-94d68106'>
+<caption class="Table Caption">
+<span id="tab:unnamed-chunk-6">Table 2: </span>Odds ratios calculated from regression coefficients.
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-94d0fe7d"><p class="cl-94cedb88"><span class="cl-94cedb86">den</span></p></td><td class="cl-94d0fe7c"><p class="cl-94cedb89"><span class="cl-94cedb86">alcLtobL</span></p></td><td class="cl-94d0fe7a"><p class="cl-94cedb89"><span class="cl-94cedb86">alcLtobH</span></p></td><td class="cl-94d0fe7b"><p class="cl-94cedb89"><span class="cl-94cedb86">alcMtobL</span></p></td><td class="cl-94d0fe7f"><p class="cl-94cedb89"><span class="cl-94cedb86">alcMtobH</span></p></td><td class="cl-94d0fe7a"><p class="cl-94cedb89"><span class="cl-94cedb86">alcHtobL</span></p></td><td class="cl-94d0fe7e"><p class="cl-94cedb89"><span class="cl-94cedb86">alcHtobH</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-94cedb8b"><p class="cl-94cedb88"><span class="cl-94cedb86">1</span></p></td><td class="cl-94cedb8f"><p class="cl-94cedb89"><span class="cl-94cedb87">0.116</span></p></td><td class="cl-94cedb8e"><p class="cl-94cedb89"><span class="cl-94cedb87">0.353</span></p></td><td class="cl-94cedb8d"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94cedb8a"><p class="cl-94cedb89"><span class="cl-94cedb87">0.727</span></p></td><td class="cl-94cedb8e"><p class="cl-94cedb89"><span class="cl-94cedb87">1.125</span></p></td><td class="cl-94cedb8c"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94d0f351"><p class="cl-94cedb88"><span class="cl-94cedb86">alcLtobL</span></p></td><td class="cl-94cedb90"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">3.035</span></p></td><td class="cl-94d0f34f"><p class="cl-94cedb89"><span class="cl-94cedb87">8.600</span></p></td><td class="cl-94d0f352"><p class="cl-94cedb89"><span class="cl-94cedb87">6.255</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">9.675</span></p></td><td class="cl-94d0f350"><p class="cl-94cedb89"><span class="cl-94cedb87">8.600</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94d0f351"><p class="cl-94cedb88"><span class="cl-94cedb86">alcLtobH</span></p></td><td class="cl-94cedb90"><p class="cl-94cedb89"><span class="cl-94cedb87">0.329</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94d0f34f"><p class="cl-94cedb89"><span class="cl-94cedb87">2.833</span></p></td><td class="cl-94d0f352"><p class="cl-94cedb89"><span class="cl-94cedb87">2.061</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">3.187</span></p></td><td class="cl-94d0f350"><p class="cl-94cedb89"><span class="cl-94cedb87">2.833</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94d0f351"><p class="cl-94cedb88"><span class="cl-94cedb86">alcMtobL</span></p></td><td class="cl-94cedb90"><p class="cl-94cedb89"><span class="cl-94cedb87">0.116</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">0.353</span></p></td><td class="cl-94d0f34f"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94d0f352"><p class="cl-94cedb89"><span class="cl-94cedb87">0.727</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">1.125</span></p></td><td class="cl-94d0f350"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94d0f351"><p class="cl-94cedb88"><span class="cl-94cedb86">alcMtobH</span></p></td><td class="cl-94cedb90"><p class="cl-94cedb89"><span class="cl-94cedb87">0.160</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">0.485</span></p></td><td class="cl-94d0f34f"><p class="cl-94cedb89"><span class="cl-94cedb87">1.375</span></p></td><td class="cl-94d0f352"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">1.547</span></p></td><td class="cl-94d0f350"><p class="cl-94cedb89"><span class="cl-94cedb87">1.375</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94d0f351"><p class="cl-94cedb88"><span class="cl-94cedb86">alcHtobL</span></p></td><td class="cl-94cedb90"><p class="cl-94cedb89"><span class="cl-94cedb87">0.103</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">0.314</span></p></td><td class="cl-94d0f34f"><p class="cl-94cedb89"><span class="cl-94cedb87">0.889</span></p></td><td class="cl-94d0f352"><p class="cl-94cedb89"><span class="cl-94cedb87">0.646</span></p></td><td class="cl-94d0f34e"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94d0f350"><p class="cl-94cedb89"><span class="cl-94cedb87">0.889</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-94d0f357"><p class="cl-94cedb88"><span class="cl-94cedb86">alcHtobH</span></p></td><td class="cl-94d0f356"><p class="cl-94cedb89"><span class="cl-94cedb87">0.160</span></p></td><td class="cl-94d0f355"><p class="cl-94cedb89"><span class="cl-94cedb87">0.353</span></p></td><td class="cl-94d0f358"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td><td class="cl-94d0f354"><p class="cl-94cedb89"><span class="cl-94cedb87">0.727</span></p></td><td class="cl-94d0f355"><p class="cl-94cedb89"><span class="cl-94cedb87">1.125</span></p></td><td class="cl-94d0f353"><p class="cl-94cedb89"><span class="cl-94cedb87">1.000</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="3499f11b-6f29-4c45-91d0-2c2672a79b7b"></div>
+<script>
+var dest = document.getElementById("3499f11b-6f29-4c45-91d0-2c2672a79b7b");
+var template = document.getElementById("177ed095-b3ee-4734-8488-fba6f2475ec7");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+</div>
+<div id="about-the-p-values" class="section level2">
+<h2>About the p-Values</h2>
+<p>Neither of the interaction term <em>p</em>-values were significant at the .05 level. That means the slopes of the moderation lines are not significantly different from the reference levels line.</p>
+<p>If neither interaction term is significant, that means it was unnecessary to control for the interaction in the model. The main effect is the same at all levels of the controlling variables.</p>
+<p>If an interaction term is significant, but the main effect is not significant, it means the combined effects differ from the reference group, but changing only one variable is not different from the reference group. In our example, it would mean <code>alcM &amp; tobH</code> differs <code>alc</code> = “L” and <code>tob</code> = “L”, but not from either <code>alcL &amp; tobH</code> or <code>alcM &amp; tobL</code>.</p>
+<p>If both the main effect and the interaction effect is significant, it means you must interpret your results relative to the reference group.</p>
+<p>This raises another question. How do you report the <em>p</em>-value of the combined effect of two or more coefficients? The theoretical answer is that you need to combine the coefficient estimate variances to calculate a new <em>t</em>-statistic. Say you fit a model</p>
+<p><span class="math display">\[
+y = \beta_0 + \beta_1 \mathrm{alc} + \beta_2 \mathrm{tob} + \beta_3 \mathrm{alc:tob} + \epsilon
+\]</span></p>
+<p>and your fitted model coefficient estimators include <span class="math inline">\(\hat{\beta}_{1M}\)</span> (<em>Medium Alcohol</em>), <span class="math inline">\(\hat{\beta}_{2H}\)</span> (<em>High Tobacco</em>), and <span class="math inline">\(\hat{\beta}_{3MH}\)</span> (<em>MediumAlcohol:HighTobacco</em>). The estimator for the combined effect of <em>Medium Alcohol &amp; High Tobacco</em> relative to the reference group <em>Low Alcohol &amp; Low Tobacco</em>, <span class="math inline">\(\hat{\alpha}\)</span>, is <span class="math inline">\(\hat{\alpha} = \hat{\beta}_{1M} + \hat{\beta}_{2H} + \hat{\beta}_{3MH}\)</span>. The <em>p</em>-value associated with <span class="math inline">\(\hat{\alpha}\)</span> is <span class="math inline">\(p = P(T&gt;t)\)</span> where <span class="math inline">\(t = \hat{\alpha} / \mathrm{SE}(\hat{\alpha})\)</span> (same as for any coefficient estimator). The difficulty is in retrieving <span class="math inline">\(\mathrm{SE}(\hat{\alpha})\)</span>. It equals the squre root of te cobined coefficient estimator variances (<a href="https://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables">Wikipedia</a>), <span class="math inline">\(\mathrm{SE}(\alpha) = \sqrt{\mathrm{Var}(\alpha)}\)</span>:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\mathrm{Var}(\alpha) = {} &amp; \mathrm{Var}(\hat{\beta}_{1M}) + \mathrm{Var}(\hat{\beta}_{2H}) + \mathrm{Var}(\hat{\beta}_{3HM}) + \\
+&amp; 2 \left(\mathrm{Cov}(\hat{\beta}_{1M}\hat{\beta}_{2H}) + \mathrm{Cov}(\hat{\beta}_{1M}\hat{\beta}_{3MH} + \mathrm{Cov}(\hat{\beta}_{2H}\hat{\beta}_{3MH}))\right)
+\end{aligned}
+\]</span></p>
+<p>Let’s see this calculation by taking elements from the model variance-covariance matrix.</p>
+<pre class="r"><code>mdl_vcov &lt;- mdl %&gt;% vcov() %&gt;%  data.frame() %&gt;% rownames_to_column()
+
+var_alcM &lt;- mdl_vcov %&gt;% filter(rowname == &quot;alcM&quot;) %&gt;% pull(&quot;alcM&quot;)
+var_tobH &lt;- mdl_vcov %&gt;% filter(rowname == &quot;tobH&quot;) %&gt;% pull(&quot;tobH&quot;)
+var_alcMtobH &lt;- mdl_vcov %&gt;% filter(rowname == &quot;alcM:tobH&quot;) %&gt;% pull(&quot;alcM.tobH&quot;)
+cov_alcM_tobH &lt;- mdl_vcov %&gt;% filter(rowname == &quot;alcM&quot;) %&gt;% pull(&quot;tobH&quot;)
+cov_alcM_alcMtobH &lt;- mdl_vcov %&gt;% filter(rowname == &quot;alcM&quot;) %&gt;% pull(&quot;alcM.tobH&quot;)
+cov_tobH_alcMtobH &lt;- mdl_vcov %&gt;% filter(rowname == &quot;tobH&quot;) %&gt;% pull(&quot;alcM.tobH&quot;)
+
+# alpha
+(alpha &lt;- coef(mdl)[&quot;alcM&quot;] + coef(mdl)[&quot;tobH&quot;] + coef(mdl)[&quot;alcM:tobH&quot;])
+##     alcM 
+## 1.833308
+
+# SE for Medium Alcohol + High Tobacco
+(se &lt;- sqrt(var_alcM + var_tobH + var_alcMtobH + 
+             2 * (cov_alcM_tobH + cov_alcM_alcMtobH + cov_tobH_alcMtobH)))
+## [1] 0.6626948
+
+# t
+(t &lt;- alpha / se)
+##     alcM 
+## 2.766445
+
+# p-value
+(p_value &lt;- pt(abs(t), Inf, lower.tail = FALSE)* 2)
+##        alcM 
+## 0.005667121</code></pre>
+<p>Happily, there is a package <strong>emmeans</strong> that calculates both the combined coefficient effects, and these <em>p</em>-values.</p>
+<pre class="r"><code>emm &lt;- emmeans::emmeans(mdl, ~ alc * tob)
+
+emm_contrast &lt;- emmeans::contrast(emm, method = &quot;revpairwise&quot;, adjust = &quot;none&quot;)
+
+emm_contrast %&gt;%
+  as_tibble() %&gt;%
+  filter(str_detect(contrast, &quot;L L$&quot;))</code></pre>
+<pre><code>## # A tibble: 5 x 6
+##   contrast  estimate    SE    df z.ratio  p.value
+##   &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+## 1 M L - L L     2.15 0.584   Inf    3.69 0.000228
+## 2 H L - L L     2.27 0.678   Inf    3.35 0.000812
+## 3 L H - L L     1.11 0.670   Inf    1.66 0.0974  
+## 4 M H - L L     1.83 0.663   Inf    2.77 0.00567 
+## 5 H H - L L     2.15 0.651   Inf    3.31 0.000942</code></pre>
+<p>There it is, second from bottom.</p>
+</div>
+<div id="key-take-aways" class="section level2">
+<h2>Key Take-aways</h2>
+<p>What have we learned?</p>
+<ul>
+<li><p>Exponentiated coefficient estimates are odds ratios. The interaction effects are multiplicative moderators of the main effects.</p></li>
+<li><p>When the <em>p</em>-value of an interaction is significant, that means the slopes of the odds lines in your figure are statistically different from each other.</p></li>
+<li><p>Combinations of main-effects and interaction effects always get you a comparison of one group vs another group.</p></li>
+<li><p>Use the <strong>emmeans</strong> package to calculate odds ratios and their associated <em>p</em>-values.</p></li>
+</ul>
+</div>
+
+  </div>
+
+  <footer>
+    <ul class="stats">
+  <li class="categories">
+    <ul>
+        
+            
+            
+                <i class="fa fa-folder"></i>
+                
+                
+                <li><a class="article-category-link" href="/categories/ml">ML</a></li>
+                
+            
+        
+    </ul>
+  </li>
+  <li class="tags">
+    <ul>
+        
+            
+            
+                <i class="fa fa-tags"></i>
+                
+                
+                <li><a class="article-category-link" href="/tags/logistic">logistic</a></li>
+                
+            
+        
+    </ul>
+  </li>
+</ul>
+
+  </footer>
+
+</article>
+
+    <article class="post">
+        <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "shortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </article>
+
+
+<ul class="actions pagination">
+    
+        <li><a href="/post/struggles-with-remote-work/"
+                class="button big previous">Struggles with Remote Work</a></li>
+    
+
+    
+        <li><a href="/post/my-netflix-habits/"
+                class="button big next">My Netflix Habits</a></li>
+    
+</ul>
+
+
+    </div>
+    
+<section id="sidebar">
+
+  
+  <section id="intro">
+    
+    
+      
+        <a href='/' class="logo"><img src="/img/main/avatar.jpg" alt="Hugo Future Imperfect" /></a>
+      
+    
+    
+      <header>
+        <h2>Data Analyst</h2>
+        <p>Normally distributed, except for the long tail.</i></p>
+      </header>
+    
+    
+      <ul class="icons">
+        
+          
+    <li><a href="/index.xml" type="application/rss+xml" target="_blank" title="RSS" class="fa fa-rss"></a></li>
+
+
+        
+        
+  <li><a href="//github.com/mpfoley73/home" target="_blank" title="GitHub" class="fa fa-github"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//linkedin.com/in/mpfoley73" target="_blank" title="LinkedIn" class="fa fa-linkedin"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//twitter.com/mpfoley73" target="_blank" title="Twitter" class="fa fa-twitter"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="mailto:mpfoley73@hotmail.com" title="Email" class="fa fa-envelope"></a></li>
+
+
+      </ul>
+    
+  </section>
+
+  
+  <section class="recent-posts">
+    <div class="mini-posts">
+      <header>
+        <h3>Recent Posts</h3>
+      </header>
+      <div class="posts-container">
+        
+
+        
+          
+        
+
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/">Post</a>
+              </h3>
+              
+              <time class="published" datetime='2022-05-02'>
+                May 2, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/2022-05-02-using-custom-fonts-in-r/">Using Custom Fonts in R</a>
+              </h3>
+              
+              <time class="published" datetime='2022-05-02'>
+                May 2, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/married-career-women-struggling-more-with-work-life-balance/">Married Career Women Struggling More with Work-Life Balance</a>
+              </h3>
+              
+              <time class="published" datetime='2022-02-10'>
+                February 10, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/cultural-origins-less-important-to-whites/">Cultural Origins Less Important to White Adults</a>
+              </h3>
+              
+              <time class="published" datetime='2022-01-17'>
+                January 17, 2022
+              </time>
+            </header>
+            
+
+          </article>
+        
+          <article class="mini-post">
+            <header>
+              <h3>
+                <a href="/post/ohio-employment/">Ohio Employment</a>
+              </h3>
+              
+              <time class="published" datetime='2021-11-20'>
+                November 20, 2021
+              </time>
+            </header>
+            
+
+          </article>
+        
+      </div>
+
+      
+        <a href=
+          
+            /blog/
+          
+        class="button">View more posts</a>
+      
+    </div>
+  </section>
+
+  
+  
+  
+  
+  
+    <section id="categories">
+      <header>
+        <h3>
+          <a href="/categories/">Categories</a>
+        </h3>
+      </header>
+        
+          
+        
+
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/projects/">projects</a>
+                <span style="float:right;">3</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/ml/">ml</a>
+                <span style="float:right;">2</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/tableau/">tableau</a>
+                <span style="float:right;">2</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/infographics/">infographics</a>
+                <span style="float:right;">1</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/tutorial/">tutorial</a>
+                <span style="float:right;">1</span>
+              
+            </header>
+          </article>
+        </p>
+        
+        <p>
+          <article>
+            <header>
+              
+                <a href="/categories/website/">website</a>
+                <span style="float:right;">1</span>
+              
+            </header>
+          </article>
+        </p>
+        
+    </section>
+  
+  
+
+  
+  
+    <section id="mini-bio">
+      <h3>About</h3>
+      <p>I am a data analyst at Progressive Insurance where I ensure Progressive meets its recruiting, retention, performance, and inclusion goals. I specialize in inferential statistics, and work primarily with R and Tableau.</p>
+      <a href="/about/" class="button">Learn More</a>
+    </section>
+  
+
+  
+  <section id="footer">
+    
+      <ul class="icons">
+        
+          
+    <li><a href="/index.xml" type="application/rss+xml" target="_blank" title="RSS" class="fa fa-rss"></a></li>
+
+
+        
+        
+  <li><a href="//github.com/mpfoley73/home" target="_blank" title="GitHub" class="fa fa-github"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//linkedin.com/in/mpfoley73" target="_blank" title="LinkedIn" class="fa fa-linkedin"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="//twitter.com/mpfoley73" target="_blank" title="Twitter" class="fa fa-twitter"></a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <li><a href="mailto:mpfoley73@hotmail.com" title="Email" class="fa fa-envelope"></a></li>
+
+
+      </ul>
+    
+    <p class="copyright">
+      
+        &copy; 2022
+        
+          Hugo Future Imperfect
+        
+      .
+      Powered by <a href="//gohugo.io" target="_blank">Hugo</a>
+    </p>
+  </section>
+</section>
+
+    </div>
+    <a id="back-to-top" href="#" class="fa fa-arrow-up fa-border fa-2x"></a>
+    
+
+    
+      
+    
+
+    
+      
+      
+      
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+        
+        
+        
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+        <script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/css.min.js"></script>
+        <script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+      
+    
+    
+    
+      <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.1.25/jquery.fancybox.min.js"></script>
+      <script src="/js/util.js"></script>
+      <script src="/js/main.js"></script>
+      <script src="/js/backToTop.js"></script>
+    
+
+    
+      
+        
+      
+    
+
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+      <script src="//yihui.name/js/math-code.js"></script>
+<script async
+src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+  </body>
+</html>
+

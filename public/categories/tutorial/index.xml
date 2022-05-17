@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tutorial on Hugo Future Imperfect</title>
+    <link>/categories/tutorial/</link>
+    <description>Recent content in Tutorial on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 02 May 2022 00:00:00 +0000</lastBuildDate><atom:link href="/categories/tutorial/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Using Custom Fonts in R</title>
+      <link>/post/2022-05-02-using-custom-fonts-in-r/</link>
+      <pubDate>Mon, 02 May 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2022-05-02-using-custom-fonts-in-r/</guid>
+      <description>For my new survival analysis project on baseball career longevity, I am using the TR Plaza font adopted by the Cleveland Guardians for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.
+BeforeAfterI ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me.</description>
+    </item>
+    
+  </channel>
+</rss>

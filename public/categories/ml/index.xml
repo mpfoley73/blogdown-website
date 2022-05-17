@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ML on Hugo Future Imperfect</title>
+    <link>/categories/ml/</link>
+    <description>Recent content in ML on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 15 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="/categories/ml/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Interpreting Logistic Regression Interactions</title>
+      <link>/post/interpreting-logistic-regression-interactions/</link>
+      <pubDate>Sun, 15 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/interpreting-logistic-regression-interactions/</guid>
+      <description>Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is
+\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]
+A \(\delta = x_1 - x_0\) unit change in \(x\) in a estimated regression \(\hat{y} = X\hat{\beta}\) is associated with a \(\delta\hat{\beta}\) factor change in the log odds of \(y\). More commonly, you take the exponent of the coefficient estimate and say a \(\delta\) unit change is associated with a \(e^{\delta\hat{\beta}}\) factor change in the odds of \(y\) (see my handbook).</description>
+    </item>
+    
+    <item>
+      <title>Struggles with Remote Work</title>
+      <link>/post/struggles-with-remote-work/</link>
+      <pubDate>Thu, 05 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/struggles-with-remote-work/</guid>
+      <description>Buffer published The 2021 State of Remote Work, a summary of a survey of over 2,000 remote workers in late 2020 and made the data available as a Google sheets file on Google Docs. BTW, the report is a follow up to their 2020 survey which was featured in MakeoverMonday, a great program devoted to rethinking data visualization.
+Buffer found that remote workers overwhelmingly support remote work. However, they did share struggles such as difficulty unplugging from the office, collaborating, and loneliness.</description>
+    </item>
+    
+  </channel>
+</rss>

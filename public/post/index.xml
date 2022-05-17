@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Post on Hugo Future Imperfect</title>
+    <link>/post/</link>
+    <description>Recent content in Post on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 02 May 2022 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Using Custom Fonts in R</title>
+      <link>/post/2022-05-02-using-custom-fonts-in-r/</link>
+      <pubDate>Mon, 02 May 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2022-05-02-using-custom-fonts-in-r/</guid>
+      <description>For my new survival analysis project on baseball career longevity, I am using the TR Plaza font adopted by the Cleveland Guardians for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.
+BeforeAfterI ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me.</description>
+    </item>
+    
+    <item>
+      <title>Married Career Women Struggling More with Work-Life Balance</title>
+      <link>/post/married-career-women-struggling-more-with-work-life-balance/</link>
+      <pubDate>Thu, 10 Feb 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/post/married-career-women-struggling-more-with-work-life-balance/</guid>
+      <description>Organizations pursuing gender equity in leadership roles are often challenged by a lack of candidates. A 2019 study by McKinsey and LeanIn.org hypothesized the “broken rung” effect: “The biggest obstacle women face on the path to senior leadership is at the first step up to manager.”1. While companies will surely benefit by striving to develop and promote leaders equally, there may be social influences that create a headwind. One such influence is the tendency for women to exit the workforce in order to focus on family.</description>
+    </item>
+    
+    <item>
+      <title>Cultural Origins Less Important to White Adults</title>
+      <link>/post/cultural-origins-less-important-to-whites/</link>
+      <pubDate>Mon, 17 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/post/cultural-origins-less-important-to-whites/</guid>
+      <description>The Pew Research Center recently published the results of its 2020 survey of 3,535 adults, exploring the importance of cultural origins among various racial/ethnic groups. The data is available (with a free account) from the Pew site. Pew’s main finding was that Black and Hispanic adults are more likely that White adults to feel connected to their roots and regard them as central to their identity. I wonder whether this finding holds generally throughout the Black and Hispanic communities, or whether the importance of roots is also a function of other factors, such as political ideology, level of education, and age.</description>
+    </item>
+    
+    <item>
+      <title>Ohio Employment</title>
+      <link>/post/ohio-employment/</link>
+      <pubDate>Sat, 20 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ohio-employment/</guid>
+      <description>The Ohio Department of Job and Family Services (ODJFS) announced Ohio’s unemployment rate fell to 5.1% in October. It was 5.3% in September, so that’s good news. The unemployment rate is a tricky concept because it combines counts of three employment statuses: employed, unemployed, and not in the labor force. The ODJFS also reports many related statistics in their monthly releases. Data journalists like Rich Exner at cleveland.</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s Taking So Long? Baseball Time Series Analysis</title>
+      <link>/post/what-s-taking-so-long-baseball-time-series-analysis/</link>
+      <pubDate>Sun, 07 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/what-s-taking-so-long-baseball-time-series-analysis/</guid>
+      <description>Everyone complains that major league baseball games take too long. I agree. The average Cleveland Indians baseball game lasted 3 hours and 5 minutes in 2021. That’s about 1 hour longer than I’d prefer. It hasn’t always been this way. Up until WW II, games lasted only about 2 hours.
+I compiled that figure using data from Baseball-Reference.com. The data on Baseball-Reference is fantastic, but you do have to work a little to get it into useable form.</description>
+    </item>
+    
+    <item>
+      <title>Battle of the Bands: Text Analysis  of Rush, Queen, and AC/DC</title>
+      <link>/post/battle-of-the-bands-ac-dc-rush-and-queen/</link>
+      <pubDate>Fri, 08 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/battle-of-the-bands-ac-dc-rush-and-queen/</guid>
+      <description>I enjoy music from Rush and Queen. Queen has more listenable songs, and some of their early work is especially creative, both musically and lyrically. But in general, Rush features stronger lyrics. Rush’s drummer and lyricist, Neil Peart, drew from a wide range of source material and employed an impressive vocabulary. Freddie Mercury, the lead singer from Queen, was not quite as creative.</description>
+    </item>
+    
+    <item>
+      <title>MakeoverMonday: Entry-Level Jobs</title>
+      <link>/post/makeovermonday-entry-level-jobs/</link>
+      <pubDate>Sun, 26 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/makeovermonday-entry-level-jobs/</guid>
+      <description>Our Makeover Monday Tableau user group at Progressive Insurance worked with 2021/W34: &amp;ldquo;Entry-level&amp;rdquo; jobs require 3+ years of experience this month.
+I posted my submission on Tableau Public. It looks similar to the original published on LinkedIn because their design is ideal. Sorted bar charts with labels are the easiest to read. I did try other designs, including one by Harish Rao that is pretty cool. You can see my other designs if you click the &amp;ldquo;download&amp;rdquo; below.</description>
+    </item>
+    
+    <item>
+      <title>My Netflix Habits</title>
+      <link>/post/my-netflix-habits/</link>
+      <pubDate>Sun, 29 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/my-netflix-habits/</guid>
+      <description>Our Makeover Monday developer user group at Progressive Insurance usually picks a topic from the UK MakeoverMonday to work with, but this month we chose a neat data set from Netflix. You can download your complete viewing history from the Netflix website (instructions here). (For some reason, I kept receiving an error message, &amp;ldquo;We ran into an issue preparing your viewing activity. You can try again now or come back at a later time.</description>
+    </item>
+    
+    <item>
+      <title>Interpreting Logistic Regression Interactions</title>
+      <link>/post/interpreting-logistic-regression-interactions/</link>
+      <pubDate>Sun, 15 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/interpreting-logistic-regression-interactions/</guid>
+      <description>Interpreting the coefficient estimators in a logistic regression is straightforward. The binary logistic regression model is
+\[y = \mathrm{logit}(\pi) = \ln\left(\frac{\pi}{1 - \pi}\right) = X\beta\]
+A \(\delta = x_1 - x_0\) unit change in \(x\) in a estimated regression \(\hat{y} = X\hat{\beta}\) is associated with a \(\delta\hat{\beta}\) factor change in the log odds of \(y\). More commonly, you take the exponent of the coefficient estimate and say a \(\delta\) unit change is associated with a \(e^{\delta\hat{\beta}}\) factor change in the odds of \(y\) (see my handbook).</description>
+    </item>
+    
+    <item>
+      <title>Struggles with Remote Work</title>
+      <link>/post/struggles-with-remote-work/</link>
+      <pubDate>Thu, 05 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/struggles-with-remote-work/</guid>
+      <description>Buffer published The 2021 State of Remote Work, a summary of a survey of over 2,000 remote workers in late 2020 and made the data available as a Google sheets file on Google Docs. BTW, the report is a follow up to their 2020 survey which was featured in MakeoverMonday, a great program devoted to rethinking data visualization.
+Buffer found that remote workers overwhelmingly support remote work. However, they did share struggles such as difficulty unplugging from the office, collaborating, and loneliness.</description>
+    </item>
+    
+    <item>
+      <title>How I Created this Website</title>
+      <link>/post/how-i-created-this-website/</link>
+      <pubDate>Tue, 27 Jul 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/how-i-created-this-website/</guid>
+      <description>I have been listening to Emily Robinson and Jacqueline Nolis&amp;rsquo;s Build a Career in Data Scienceon Audible. Chapter 4 explains how to go about creating a portfolio of data science projects. Your portfolio should demonstrate your skills, both in data analytics, and in communication. Emily and Jacqueline suggest you manage your code in GitHub repositories, and summarize your results in blog posts and Twitter posts. I have a GitHub account with a few repos in it, but no website to blog about what I&amp;rsquo;ve done.</description>
+    </item>
+    
+  </channel>
+</rss>

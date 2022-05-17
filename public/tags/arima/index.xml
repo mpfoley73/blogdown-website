@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>arima on Hugo Future Imperfect</title>
+    <link>/tags/arima/</link>
+    <description>Recent content in arima on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 07 Nov 2021 00:00:00 +0000</lastBuildDate><atom:link href="/tags/arima/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>What&#39;s Taking So Long? Baseball Time Series Analysis</title>
+      <link>/post/what-s-taking-so-long-baseball-time-series-analysis/</link>
+      <pubDate>Sun, 07 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/what-s-taking-so-long-baseball-time-series-analysis/</guid>
+      <description>Everyone complains that major league baseball games take too long. I agree. The average Cleveland Indians baseball game lasted 3 hours and 5 minutes in 2021. That’s about 1 hour longer than I’d prefer. It hasn’t always been this way. Up until WW II, games lasted only about 2 hours.
+I compiled that figure using data from Baseball-Reference.com. The data on Baseball-Reference is fantastic, but you do have to work a little to get it into useable form.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>JSON on Hugo Future Imperfect</title>
+    <link>/tags/json/</link>
+    <description>Recent content in JSON on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 20 Nov 2021 00:00:00 +0000</lastBuildDate><atom:link href="/tags/json/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Ohio Employment</title>
+      <link>/post/ohio-employment/</link>
+      <pubDate>Sat, 20 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ohio-employment/</guid>
+      <description>The Ohio Department of Job and Family Services (ODJFS) announced Ohio’s unemployment rate fell to 5.1% in October. It was 5.3% in September, so that’s good news. The unemployment rate is a tricky concept because it combines counts of three employment statuses: employed, unemployed, and not in the labor force. The ODJFS also reports many related statistics in their monthly releases. Data journalists like Rich Exner at cleveland.</description>
+    </item>
+    
+  </channel>
+</rss>

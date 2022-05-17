@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>blogdown on Hugo Future Imperfect</title>
+    <link>/tags/blogdown/</link>
+    <description>Recent content in blogdown on Hugo Future Imperfect</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 27 Jul 2021 00:00:00 +0000</lastBuildDate><atom:link href="/tags/blogdown/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>How I Created this Website</title>
+      <link>/post/how-i-created-this-website/</link>
+      <pubDate>Tue, 27 Jul 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/how-i-created-this-website/</guid>
+      <description>I have been listening to Emily Robinson and Jacqueline Nolis&amp;rsquo;s Build a Career in Data Scienceon Audible. Chapter 4 explains how to go about creating a portfolio of data science projects. Your portfolio should demonstrate your skills, both in data analytics, and in communication. Emily and Jacqueline suggest you manage your code in GitHub repositories, and summarize your results in blog posts and Twitter posts. I have a GitHub account with a few repos in it, but no website to blog about what I&amp;rsquo;ve done.</description>
+    </item>
+    
+  </channel>
+</rss>
