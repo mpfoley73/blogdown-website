@@ -1,9 +1,9 @@
 baseurl = "/"
 languageCode = "en-us"
-title = "Hugo Future Imperfect"
+title = "Michael Foley - Data Analyst"
 theme = "hugo-future-imperfect"
 preserveTaxonomyNames = true
-paginate = 3
+paginate = 10
 disqusShortname = "shortname"
 googleAnalytics = ""
 pluralizeListTitles = false
