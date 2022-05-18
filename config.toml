@@ -1,7 +1,7 @@
 baseurl = "/"
 languageCode = "en-us"
 title = "Michael Foley - Data Analyst"
-theme = "hugo-future-imperfect"
+theme = "hugo-future-imperfect-slim"
 preserveTaxonomyNames = true
 paginate = 10
 disqusShortname = "shortname"
