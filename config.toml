@@ -1,10 +1,10 @@
 # For a description of these parameters, please visit the theme wiki.
 # https://github.com/pacollins/hugo-future-imperfect-slim/wiki/config.toml
-baseurl                 = "https://hugo-future-imperfect-slim.netlify.app/"
+baseurl                 = "https://mpfoley73.netlify.app/"
 DefaultContentLanguage  = "en"
-title                   = "Hugo Future Imperfect Slim"
+title                   = "Michael Foley - Data Analyst"
 theme                   = "hugo-future-imperfect-slim"
-paginate                = 3
+paginate                = 8
 disqusShortname         = ""
 googleAnalytics         = ""
 pluralizeListTitles     = false
@@ -28,7 +28,7 @@ disableLanguages        = []
   highlightjs           = true
   highlightjsTheme      = ""
   highlightjsLang       = []
-  viewMorePostsLink     = "blog"
+  viewMorePostsLink     = "post"
   readingTime           = true
   imageStretch          = ""
   removeBlur            = false
@@ -38,8 +38,8 @@ disableLanguages        = []
   tocWords              = 400
 
   [params.meta]
-    description         = "A theme by HTML5 UP, ported by Julio Pescador. Slimmed and enhanced by Patrick Collins. Multilingual by StatnMap. Powered by Hugo."
-    author              = "HTML5UP and Hugo"
+    description         = "My blog."
+    author              = "Michael Foley"
     favicon             = false
     svg                 = true
     faviconVersion      = "1"
@@ -47,25 +47,25 @@ disableLanguages        = []
     iOSColor            = "#ffffff"
 
   [params.header]
-    navbarTitle         = "Future Imperfect"
+    navbarTitle         = "Mike"
     dynamicTitles       = true
     searchMenu          = true
     shareMenu           = true
     languageMenu        = true
 
   [params.intro]
-    header                = "Hugo Future Imperfect Slim"
-    paragraph             = "Another fine, responsive site template by <a href='http://html5up.net'>HTML5 UP</a>."
+    header                = "Human Resources"
+    paragraph             = "I am a data analyst at Progressive Insurance where I ensure Progressive meets its recruiting, retention, performance, and inclusion goals. I specialize in inferential statistics, and work primarily with R and Tableau."
     rssIntro              = true
     socialIntro           = true
     hideWhenSingleColumn  = false
     alwaysOnHomepage      = false
 
     [params.intro.pic]
-      src                 = "img/main/logo.jpg"
+      src                 = "/img/main/avatar.jpg"
       shape               = "circle"
       width               = ""
-      alt                 = "Hugo Future Imperfect Slim"
+      alt                 = "Mike"
 
   [params.sidebar]
     about               = "This theme was developed for Hugo static site generator."
