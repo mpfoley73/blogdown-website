@@ -13,7 +13,7 @@ featuredpath: ''
 linktitle: ''
 ---
 
-![](./images/Screenshot 2022-05-20 041959.png)
+![](https://mpfoley73.netlify.app/post/2022-05-02-using-custom-fonts-in-r/images/Screenshot 2022-05-20 041959.png)
 
 ```{r setup, include=FALSE}
 library(tidyverse)
