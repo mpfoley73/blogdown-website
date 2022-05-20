@@ -6,15 +6,12 @@ slug: []
 categories:
   - Tutorial
 tags: []
-description: ''
-featured: ''
-featuredalt: ''
-featuredpath: ''
-linktitle: ''
-featured_image: /post/2022-05-02-using-custom-fonts-in-r/images/featured.png
-  caption: "New Font"
-  focal_point: "Center"
-  alt_text: Changing fonts in ggplot.
+description: 'How to install a font and use it in ggplot.'
+images:
+  alt: 'Georgia'
+  src: 'featured.png'
+  stretch: 'cover'
+removeBlur: no
 ---
 
 ```{r setup, include=FALSE}
