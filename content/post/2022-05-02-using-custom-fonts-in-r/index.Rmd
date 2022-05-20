@@ -11,7 +11,7 @@ featured: ''
 featuredalt: ''
 featuredpath: ''
 linktitle: ''
-image:
+featured_image: /post/2022-05-02-using-custom-fonts-in-r/images/featured.png
   caption: "New Font"
   focal_point: "Center"
   alt_text: Changing fonts in ggplot.
