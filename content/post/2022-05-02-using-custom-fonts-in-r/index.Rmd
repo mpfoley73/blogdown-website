@@ -13,6 +13,8 @@ featuredpath: ''
 linktitle: ''
 ---
 
+![](./images/Screenshot 2022-05-20 041959.png)
+
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(lubridate)
