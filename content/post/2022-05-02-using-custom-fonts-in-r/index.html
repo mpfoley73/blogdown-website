@@ -7,11 +7,9 @@ categories:
   - Tutorial
 tags: []
 description: 'How to install a font and use it in ggplot.'
-images:
-  alt: 'Georgia'
-  src: 'featured.png'
-  stretch: 'cover'
-removeBlur: no
+featured: 'featured.png'
+featuredpath: '../../post/2022-05-02-using-custom-fonts-in-r'
+featuredstretch: 'cover'
 ---
 
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
@@ -46,9 +44,10 @@ library(extrafont)</code></pre>
 # message that it is &quot;Registering fonts with R.&quot;
 # loadfonts(device=&quot;win&quot;)
 
-ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() +
-  ggtitle(&quot;Georgia font!&quot;) +
-  theme(text = element_text(size = 16, family=&quot;Agency FB&quot;, face=&quot;italic&quot;))</code></pre>
+ggplot(mtcars, aes(x=wt, y=mpg)) + 
+  geom_point() +
+  ggtitle(&quot;TR Plaza font!&quot;) +
+  theme(text = element_text(size = 16, family=&quot;TR Plaza&quot;))</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>The key is setting the <code>family</code> argument of the <code>element_text()</code> function. How do you know what string to use? The name that appears in your MS Word font selection seems to always work. You can see the registered fonts with <code>extrafont::fonts()</code>, or even more detail with <code>extrafont::fonttable()</code>.</p>
 <pre class="r"><code>fonts() %&gt;% .[1:6] # just the first 6

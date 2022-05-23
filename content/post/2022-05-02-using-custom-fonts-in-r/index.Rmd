@@ -7,11 +7,9 @@ categories:
   - Tutorial
 tags: []
 description: 'How to install a font and use it in ggplot.'
-images:
-  alt: 'Georgia'
-  src: 'featured.png'
-  stretch: 'cover'
-removeBlur: no
+featured: 'featured.png'
+featuredpath: '../../post/2022-05-02-using-custom-fonts-in-r'
+featuredstretch: 'cover'
 ---
 
 ```{r setup, include=FALSE}
@@ -68,9 +66,10 @@ library(extrafont)
 # message that it is "Registering fonts with R."
 # loadfonts(device="win")
 
-ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() +
-  ggtitle("Georgia font!") +
-  theme(text = element_text(size = 16, family="Agency FB", face="italic"))
+ggplot(mtcars, aes(x=wt, y=mpg)) + 
+  geom_point() +
+  ggtitle("TR Plaza font!") +
+  theme(text = element_text(size = 16, family="TR Plaza"))
 ```
 
 The key is setting the `family` argument of the `element_text()` function. How do you know what string to use? The name that appears in your MS Word font selection seems to always work. You can see the registered fonts with `extrafont::fonts()`, or even more detail with `extrafont::fonttable()`.
