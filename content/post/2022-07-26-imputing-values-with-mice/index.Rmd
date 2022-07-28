@@ -121,7 +121,7 @@ imp <- nhanes %>%
 Examples of MICE in action: 
 
 * [Major League Baseball player life expectancies](https://mpfoley73.github.io/baseball-survival/saint_onge_2008.html)
-* [Kaggle Competition = Ames House Prices](https://github.com/mpfoley73/kaggle-ames/blob/master/ames_01_datamgmt.R)
+* [Kaggle Competition of Ames House Prices](https://github.com/mpfoley73/kaggle-ames/blob/master/ames_01_datamgmt.R)
 
 
 # References
