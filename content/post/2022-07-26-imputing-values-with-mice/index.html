@@ -1,0 +1,229 @@
+---
+title: Imputing Values with MICE
+author: Michael Foley
+date: '2022-07-26'
+slug: []
+categories:
+  - Tutorial
+tags:
+  - MICE
+comments: yes
+description: 'How to use MICE to impute values.'
+featured: 'featured.jpg'
+featuredpath: '../../post/2022-07-26-imputing-values-with-mice'
+featuredstretch: 'cover'
+---
+
+
+
+<p>There are three techniques usually used to deal with missing values:</p>
+<ul>
+<li><p>Ignore them and just use complete cases. This is acceptable if &lt;5% of cases are incomplete and missingness is random (Azur, <a href="#Azur">2004</a>)</p></li>
+<li><p>Impute values with their mean, median, or mode. A mean imputation leaves the overall mean unchanged, but artificially reduces the variable’s variance (Alice, <a href="#Alice">2018</a>).</p></li>
+<li><p>Impute values with multivariate imputation by chained equations (MICE). This method creates multiple predictions of each missing value, allowing the researcher to account for uncertainty in the imputations.</p></li>
+</ul>
+<p>This tutorial explains how to implement MICE using the <strong>mice</strong> R package.</p>
+<div id="how-mice-works" class="section level1">
+<h1>How MICE works</h1>
+<p>MICE is a multiple imputation technique. It assumes missing values are “missing at random”, meaning that after controlling for all the variables in the data, any remaining missingingness is completely random. If the data fails this assumption, MICE produces biased estimates.</p>
+<p>MICE works by fitting a series of regression models of each variable conditioned on the other variables. The “chained equations” aspect of MICE is four steps.</p>
+<ol style="list-style-type: decimal">
+<li>Impute simple placeholder values for all missing data (e.g., using the variable mean).</li>
+<li>For each variable with missing values, remove its placeholder values, fit a regression model conditioned on the other data variables, then use the model to replace the missing values with the model predictions.</li>
+<li>Repeat step 2) for a number of cycles, usually 5, each cycle replacing the missing values with improved estimates. By the last cycle, the imputations should be stable.</li>
+</ol>
+<p>The “multiple” aspect of MICE is repeating the procedure multiple times, usually 5, to produce a range of imputed values. From this set of values, the researcher can either choose one (the <code>complete()</code> function in <strong>mice</strong> defaults to choosing the first data set), or pooling the imputations.</p>
+</div>
+<div id="important-considerations" class="section level1">
+<h1>Important Considerations</h1>
+<p>Only include variables that are either in your analysis model (including the response variable) or that are related to the variables that will receive imputations. E.g., if you are imputing height, then exclude subject surname from the MICE procedure. If your analysis model includes interaction terms, include them as well. The MICE model should be more general than your model.</p>
+<p>If a variable can be constructed from other variables, then impute the other variable values instead of the summary variable. E.g., body mass index (BMI) is a summary of height and weight. If you have height and weight as variables, impute them then derive BMI rather than imputing BMI directly.</p>
+</div>
+<div id="mice-in-r" class="section level1">
+<h1>MICE in R</h1>
+<p>The following case study is based on the vignette’s on the <strong>mice</strong> package <a href="https://github.com/amices/mice/">github site</a>. <code>nhanes</code> is a 25x4 data set in the <strong>mice</strong> package with missing values in several cols.</p>
+<pre class="r"><code>library(tidyverse)
+library(mice)
+
+skimr::skim(nhanes)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-1">Table 1: </span>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">nhanes</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">25</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">4</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">numeric</td>
+<td align="left">4</td>
+</tr>
+<tr class="odd">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table style="width:100%;">
+<colgroup>
+<col width="15%" />
+<col width="11%" />
+<col width="15%" />
+<col width="7%" />
+<col width="6%" />
+<col width="6%" />
+<col width="7%" />
+<col width="7%" />
+<col width="7%" />
+<col width="6%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">age</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">1.76</td>
+<td align="right">0.83</td>
+<td align="right">1.0</td>
+<td align="right">1.00</td>
+<td align="right">2.00</td>
+<td align="right">2.00</td>
+<td align="right">3.0</td>
+<td align="left">▇▁▅▁▃</td>
+</tr>
+<tr class="even">
+<td align="left">bmi</td>
+<td align="right">9</td>
+<td align="right">0.64</td>
+<td align="right">26.56</td>
+<td align="right">4.22</td>
+<td align="right">20.4</td>
+<td align="right">22.65</td>
+<td align="right">26.75</td>
+<td align="right">28.92</td>
+<td align="right">35.3</td>
+<td align="left">▇▅▆▃▃</td>
+</tr>
+<tr class="odd">
+<td align="left">hyp</td>
+<td align="right">8</td>
+<td align="right">0.68</td>
+<td align="right">1.24</td>
+<td align="right">0.44</td>
+<td align="right">1.0</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+<td align="right">2.0</td>
+<td align="left">▇▁▁▁▂</td>
+</tr>
+<tr class="even">
+<td align="left">chl</td>
+<td align="right">10</td>
+<td align="right">0.60</td>
+<td align="right">191.40</td>
+<td align="right">45.22</td>
+<td align="right">113.0</td>
+<td align="right">185.00</td>
+<td align="right">187.00</td>
+<td align="right">212.00</td>
+<td align="right">284.0</td>
+<td align="left">▃▁▇▃▁</td>
+</tr>
+</tbody>
+</table>
+<p>You might start with an exploration of the missingness pattern. <code>mice::md.pattern()</code> helps you investigate the structure of missing values. The matrix is the missingness pattern (red = missing, blue = not missing). The left column of numbers is the count of instances of the pattern in the data. The right column of numbers is the number of variables in the pattern with missing values (i.e., the number of red boxes). The bottom row of numbers is the count of rows in the data with the number of missing values for the variable. <code>nhanes</code> has 13 rows with complete cases, three rows where only <code>chl</code> is null, etc. <code>chl</code>, <code>hyp</code>, and <code>bmi</code> are simultaneously null 7 times. In all, <code>chl</code> is null 10 times.</p>
+<pre class="r"><code>mice::md.pattern(nhanes) %&gt;% invisible()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>You can simply pass the data frame into <code>mice()</code> to produce the imputations, then <code>complete()</code> to return a new data frame with the missing values replaced by the imputations. <code>mice::mice()</code> returns an object of type multiply imputed data set (<code>mids</code>) that includes the original data, the imputed values, and other metadata. The <code>mice()</code> defaults are to run 5 iterations (<code>maxit = 5</code>) per imputation and <code>m = 5</code> imputations per missing value. The imputed values are stored as vectors in a list object, <code>imp$imp</code>. Function <code>complete()</code> returns a new data frame with missing values replaced by their imputed value.</p>
+<pre class="r"><code>imp &lt;- mice::mice(nhanes, print = FALSE, m = 1)
+
+nhanes_2 &lt;- complete(imp)</code></pre>
+<p>That’s technically all you have to do, <code>dat %&gt;% mice() %&gt;% complete()</code>. But there are a few things more you should know.</p>
+</div>
+<div id="fine-tune-your-analysis" class="section level1">
+<h1>Fine Tune your Analysis</h1>
+<p>First, you may not want to use all the variables in your data frame to estimate the missing values. E.g., you may have an id column or a character descriptor. You can specify the vars to use with the <code>predctorMatrix</code> parameter and <code>quickpred()</code> utility function. The <code>quickpred()</code> utility function creates a matrix of variables where 1 means it is used in the prediction of the other variable. Below, <code>bmi</code> and <code>hyp</code> are excluded from the list of variables contributing to imputations (although they receive imputed values).</p>
+<p>Also, you can set a seed value to guarantee reproducibility.</p>
+<pre class="r"><code># What it looks like
+quickpred(nhanes, exclude = c(&quot;bmi&quot;, &quot;hyp&quot;))</code></pre>
+<pre><code>##     age bmi hyp chl
+## age   0   0   0   0
+## bmi   1   0   0   1
+## hyp   1   0   0   1
+## chl   1   0   0   0</code></pre>
+<pre class="r"><code># In use
+imp &lt;- nhanes %&gt;% 
+  mice(
+    predictorMatrix = quickpred(nhanes, exclude = c(&quot;bmi&quot;, &quot;hyp&quot;)), 
+    print = FALSE, 
+    seed = 123
+  )</code></pre>
+<p>You can also evaluate your imputations by inspecting the iteration process to see if the imputed values converged to stable values. The <code>plot()</code> of the <code>mids</code> object shows the mean (left col) and standard deviation (right) col of each variable (rows) imputation iteration. A separate line plot is produced for each imputation. Below you see the 5 iterations (default) along the x-axis and the 5 imputations (default) as colors. The mean <code>bmi</code> ranged from 25-29 in the first iteration and ended at 25-28 by the fifth iteration.</p>
+<pre class="r"><code>plot(imp)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>You can produce a density plot to compare the imputation distribution (red) to the non-imputation distribution. They should overlap.</p>
+<pre class="r"><code>densityplot(imp)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="parting-thoughts" class="section level1">
+<h1>Parting Thoughts</h1>
+<p>Even though you produce 5 imputations by default, <code>complete()</code> only pulls the first one for you by default. Your can use the others for diagnostics like the <code>plot()</code> above.</p>
+<p>The regression model applied to each variable can be independent (OLS for numeric, logistic for binary, Poisson for count, etc.), or even a non-regression model such a classification tree. The mids object returned by <code>mice()</code> tells you which it chose. You can override with the <code>method</code> or <code>defaultMethod</code> parameters.</p>
+<p>If you just need a mean or median imputation, <code>mice()</code> can do that for you. Set <code>maxiter = 1</code> and <code>m = 1</code> and <code>method = "mean"</code>.</p>
+<pre class="r"><code>imp &lt;- nhanes %&gt;% 
+  mice(
+    m = 1,
+    method = &quot;mean&quot;,
+    maxit = 1,
+    print = FALSE
+  )</code></pre>
+<p>Examples of MICE in action:</p>
+<ul>
+<li><a href="https://mpfoley73.github.io/baseball-survival/saint_onge_2008.html">Major League Baseball player life expectancies</a></li>
+<li><a href="https://github.com/mpfoley73/kaggle-ames/blob/master/ames_01_datamgmt.R">Kaggle Competition = Ames House Prices</a></li>
+</ul>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<p><a id="Azur"></a>Azur MJ, Stuart EA, Frangakis C, Leaf PJ. Multiple imputation by chained equations: what is it and how does it work? Int J Methods Psychiatr Res. 2011 Mar;20(1):40-9. doi: 10.1002/mpr.329. PMID: 21499542; PMCID: PMC3074241. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3074241/">html</a>.</p>
+<p><a id="Alice"></a>Alice, Michy. Imputing Missing Data with R; MICE package. Published Oct 4, 2015, Updated May 14, 2018. <a href="https://datascienceplus.com/imputing-missing-data-with-r-mice-package/">html</a>.</p>
+<p><a id="amices"></a>mice R package on GitHub with links to vignettes. <a href="https://github.com/amices/mice/">github</a></p>
+<p><a id="vanbuuren"></a>van Buuren, S., &amp; Groothuis-Oudshoorn, K. (2011). mice: Multivariate Imputation by Chained Equations in R. Journal of Statistical Software, 45(3), 1–67. <a href="https://doi.org/10.18637/jss.v045.i03" class="uri">https://doi.org/10.18637/jss.v045.i03</a>. <a href="https://www.jstatsoft.org/article/view/v045i03">jstatsoft</a>.</p>
+</div>
