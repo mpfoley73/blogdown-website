@@ -1,0 +1,315 @@
+---
+title: Differential Dropout Bias
+author: Michael Foley
+date: '2022-12-09'
+slug: []
+categories: []
+tags: []
+description: ''
+topics: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE
+)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(janitor)
+library(nlme)
+library(broom)
+```
+
+Participant dropout in a longitudinal study is a potential source of bias. However, Bell ([2013](#Bell)) shows differential dropout does not always bias results, and conversely, results can be biased by *non*-differential dropout. Bell demonstrates this with a simulation with fictional data set that I try to mimic here.
+
+Suppose a clinical trial assesses quality of life under a treatment vs placebo *n* = 200 participants at baseline and at two later time points. The average quality of life was the same for both groups at baseline (50) and degraded for both groups as the disease progressed, but the treatment group fared better.
+
+```{r}
+n <- 200
+group_fct <- factor(c(0, 1), labels = c("control", "treatment"))
+
+# n = 200 subjects with 3 time observations = 600 rows
+dat_0 <- expand.grid(id = 1:n, time = 0:2) %>%
+  mutate(group = if_else(id <= n / 2, group_fct[1], group_fct[2])) %>%
+  arrange(id, time)
+
+# Quality of Life (QoL) dependent variable.
+beta <- c(50, -3.5, -7.0, 0, 2.5, 5)
+dat_1 <- dat_0 %>% mutate(E_y = beta[1] + 
+                            beta[2] * (time == 1) + 
+                            beta[3] * (time == 2) + 
+                            beta[4] * (group == "treatment") * (time == 0) +
+                            beta[5] * (group == "treatment") * (time == 1) +
+                            beta[6] * (group == "treatment") * (time == 2))
+
+ggplot(dat_1, aes(x = time, y = E_y)) + 
+  geom_line(aes(linetype = group)) +
+  geom_point() +
+  ggtitle("Quality of Life Assessments")
+```
+
+Bell created 10,000 data sets with perturbations meant to simulate between-person (`b`) and within-person effects (`e`). I'll create 1,000 to improve performance.
+
+```{r}
+sims <- 100
+
+set.seed(123)
+
+dat_2 <- dat_1 %>% mutate(sim = 1)
+for(i in 2:sims) {dat_2 <- bind_rows(dat_2, dat_1 %>% mutate(sim = i))}
+dat_2$b <- rnorm(nrow(dat_2), 0, sqrt(60)) # between-person
+dat_2$e <- rnorm(nrow(dat_2), 0, sqrt(40)) # within-person
+dat_2$y <- dat_2$E_y + dat_2$b + dat_2$e
+dat_2 <- rowid_to_column(dat_2)
+dat_2 <- dat_2 %>% select(rowid, sim, id, time, group, everything(), -c(b, e))
+
+dat_3 <- dat_2 %>% 
+  nest(data = -sim) %>%
+  mutate(data = map(data, ~ {group_by(., id) %>% arrange(id, time)}))
+
+pluck(dat_3, "data", 1) %>% head()
+```
+
+Bell randomly removed data points from the data sets. Missing data can be classified as
+
+- **Missing completely at random** (MCAR) is unrelated to covariates or prior values, so there are no systematic group differences.
+- **Missing at random** (MAR) is not random, but controlling for its reasons explains group differences.
+- **Missing not at random** (MNAR) has grouped differences that cannot be controlled for.
+
+If a participant drops out of a study for reasons having nothing to do with the study, the missingess is probably MCAR. If they drop out because because of something related to the study (e.g., treatment effect), the missingness is MAR or MNAR. You can detect MCAR vs MAR or MNAR by comparing measurements between dropouts and completers. Non-MCAR will have different starting values or different progressions (slopes). You generally cannot distinguish MAR from MNAR.
+
+Researchers sometimes handle missingness by only considering complete cases, or imputing with the last observed value or average value, but these methods introduce bias. If your data is MCAR or MAR, likelihood based mixed models for repeated measures can yield unbiased estimates of the treatment effect. These models use information from participants with complete data to implicitly impute the missing values.
+
+# Demonstation with Simulations
+
+Bell simulated MCAR, MAR, and MNAR four ways by varying whether the missingess occurs at equal rates between the treatment and control groups and by varying whether the missingness mechanism works in the same direction between the groups. These four combinations combined with three missingness types create 12 data sets.
+
+```{r}
+set.seed(123)
+
+make_mcar <- function(dat) {
+  dat %>%
+    bind_cols(p = runif(nrow(dat))) %>%
+    mutate(
+      eq_same = p >= sqrt(.7)^time,
+      eq_diff = eq_same,
+      ne_same = if_else(group == "control", p >= sqrt(.6)^time, p >= sqrt(.8)^time),
+      ne_diff = ne_same
+    ) %>%
+    ungroup()
+}
+mcar <- dat_3 %>% mutate(data = map(data, make_mcar))
+
+M_y <- dat_2 %>% group_by(group, time) %>% summarize(M = mean(y))# %>%
+  # group_by(group) %>% arrange(time) %>% mutate(M_l1 = lag(M)) %>%
+  # select(group, time, M_l1)
+SD <- sd(dat_2$y)
+make_mar <- function(dat) {
+  dat %>%
+  # dat_3 %>% pluck("data", 1) %>%
+    bind_cols(p = runif(nrow(.))) %>%
+    inner_join(M_y, by = c("group", "time")) %>%
+    arrange(time) %>%
+    mutate(
+      y_l1 = lag(y),
+      M_l1 = lag(M),
+      base = pnorm(y_l1, M_l1, SD, lower.tail = FALSE),
+      eq_same = p >= 1 - (.325 * base),
+      eq_diff = p >= 1 - (.325 * if_else(group == "control", base, (1 - base))),
+      ne_same = p >= 1 - (if_else(group == "control", .45, .21) * base),
+      ne_diff = p >= 1 - (if_else(group == "control", .45, .21) * if_else(group == "control", base, (1 - base)))
+    ) %>%
+    ungroup() %>%
+    replace_na(list(eq_same = FALSE, eq_diff = FALSE, ne_same = FALSE, ne_diff = FALSE))
+}
+mar <- dat_3 %>% mutate(data = map(data, make_mar))
+mar %>% pluck("data", 1) %>% count(eq_same)
+
+# 
+# dat_mnar <- dat_mar
+# dat_mnar$eq_sam <- dat_mnar$c_eq * pnorm(dat_mnar$y_l1, dat_mnar$M_y_l1, SD, lower.tail = FALSE)
+# dat_mnar$eq_diff <- dat_mnar$c_eq * pnorm(dat_mnar$y_l1, dat_mnar$M_y_l1, SD, lower.tail = (dat_mnar$grp == "treatment"))
+# dat_mnar$ne_sam <- dat_mnar$c_ne * pnorm(dat_mnar$y_l1, dat_mnar$M_y_l1, SD, lower.tail = FALSE)
+# dat_mnar$ne_diff <- dat_mnar$c_ne * pnorm(dat_mnar$y_l1, dat_mnar$M_y_l1, SD, lower.tail = (dat_mnar$grp == "treatment"))
+
+make_miss <- function(dat, analysis) {
+  dat %>%
+    mutate(
+      y_comp_case = if_else(!!ensym(analysis), NA_real_, y),
+      y_comp_case = if_else(time == 2 & is.na(lag(y_comp_case)), NA_real_, y_comp_case),
+      y_mean = mean(y_comp_case, na.rm = TRUE),
+      y_mean_imp = coalesce(y_comp_case, y_mean),
+      y_locf = coalesce(y_comp_case, lag(y_comp_case)),
+      y_locf = coalesce(y_locf, lag(y_locf)),
+      d_y = y - case_when(
+        time == 2 ~ lag(y, 2), time == 1 ~ lag(y, 1), TRUE ~ y),
+      d_y_comp_case = y_comp_case - case_when(
+        time == 2 ~ lag(y_comp_case, 2), time == 1 ~ lag(y_comp_case, 1), TRUE ~ y_comp_case),
+      d_y_mean_imp = y_mean_imp - case_when(
+        time == 2 ~ lag(y_mean_imp, 2), time == 1 ~ lag(y_mean_imp, 1), TRUE ~ y_mean_imp),
+      d_y_locf = y_locf - case_when(
+        time == 2 ~ lag(y_locf, 2), time == 1 ~ lag(y_locf, 1), TRUE ~ y_locf)
+    ) %>%
+    ungroup() %>%
+    select(-y_mean) %>%
+    rename(dropout = !!ensym(analysis))
+}
+
+mcar_eq_same <- mcar %>% mutate(data = map(data, ~make_miss(., "eq_same")))
+mcar_eq_diff <- mcar %>% mutate(data = map(data, ~make_miss(., "eq_diff")))
+mcar_ne_same <- mcar %>% mutate(data = map(data, ~make_miss(., "ne_same")))
+mcar_ne_diff <- mcar %>% mutate(data = map(data, ~make_miss(., "ne_diff")))
+
+mar_eq_same <- mar %>% mutate(data = map(data, ~make_miss(., "eq_same")))
+mar_eq_same %>% pluck("data", 1) %>% count(group, time, y_comp_case)
+mar_eq_diff <- mar %>% mutate(data = map(data, ~make_miss(., "eq_diff")))
+mar_ne_same <- mar %>% mutate(data = map(data, ~make_miss(., "ne_same")))
+mar_ne_diff <- mar %>% mutate(data = map(data, ~make_miss(., "ne_diff")))
+
+mnar_eq_same <- handle_missing(mnar, "eq_same") %>% rename(dropout = eq_same) %>% 
+  select(-c(p, eq_diff, ne_same, ne_diff))
+mnar_eq_diff <- handle_missing(mnar, "eq_diff") %>% rename(dropout = eq_diff) %>% 
+  select(-c(p, eq_same, ne_same, ne_diff))
+mnar_ne_same <- handle_missing(mnar, "eq_same") %>% rename(dropout = ne_same) %>% 
+  select(-c(p, eq_diff, eq_same, ne_diff))
+mnar_ne_diff <- handle_missing(mnar, "eq_diff") %>% rename(dropout = ne_diff) %>% 
+  select(-c(p, eq_diff, eq_same, ne_same))
+
+mcar_eq_same %>% filter(sim == 1, id == 2)
+mcar[1, ]$data
+
+dat_mar %>% count(group, time, M, M_l1)
+```
+
+```{r}
+make_tabyl <- function(dat) {
+  dat %>%
+    unnest(data) %>% 
+    tabyl(time, dropout, group) %>% 
+    adorn_percentages() %>% 
+    adorn_pct_formatting() %>% 
+    adorn_ns()
+}
+mar_eq_same %>% make_tabyl()
+mcar_eq_diff %>% make_tabyl()
+mcar_ne_same %>% make_tabyl()
+mcar_ne_diff %>% make_tabyl()
+```
+
+# Simulation Analysis
+
+```{r}
+fit_model <- function(dat, fmla) {
+  dat %>%
+    mutate(
+      mdl = map(data, ~ lm(fmla, na.action = na.exclude, data = .)),
+      pred = map(mdl, predict),
+      aug = map2(data, pred, ~ bind_cols(.x, data.frame(.fitted = .y)))
+    ) %>%
+    unnest(aug) %>%
+    select(-c(mdl, pred, data))
+}
+
+base_fmla <- formula(. ~ group * time)
+
+dat_4 <- bind_rows(
+  mcar_eq_same_mean_imp = fit_model(mcar_eq_same, update(base_fmla, d_y_mean_imp ~ .)),
+  mcar_eq_diff_mean_imp = fit_model(mcar_eq_diff, update(base_fmla, d_y_mean_imp ~ .)),
+  mcar_ne_same_mean_imp = fit_model(mcar_ne_same, update(base_fmla, d_y_mean_imp ~ .)),
+  mcar_ne_diff_mean_imp = fit_model(mcar_ne_diff, update(base_fmla, d_y_mean_imp ~ .)),
+  mar_eq_same_comp_case = fit_model(mar_eq_same, update(base_fmla, d_y_comp_case ~ .)),
+  mar_eq_diff_comp_case = fit_model(mar_eq_diff, update(base_fmla, d_y_comp_case ~ .)),
+  mar_ne_same_comp_case = fit_model(mar_ne_same, update(base_fmla, d_y_comp_case ~ .)),
+  mar_ne_diff_comp_case = fit_model(mar_ne_diff, update(base_fmla, d_y_comp_case ~ .)),
+  mar_eq_same_mean_imp = fit_model(mar_eq_same, update(base_fmla, d_y_mean_imp ~ .)),
+  mar_eq_diff_mean_imp = fit_model(mar_eq_diff, update(base_fmla, d_y_mean_imp ~ .)),
+  mar_ne_same_mean_imp = fit_model(mar_ne_same, update(base_fmla, d_y_mean_imp ~ .)),
+  mar_ne_diff_mean_imp = fit_model(mar_ne_diff, update(base_fmla, d_y_mean_imp ~ .)),
+  .id = "analysis"
+)
+mar_eq_same %>% pluck("data", 1) %>% select(group, time, d_y_comp_case)
+
+mnar_eq_same_mean_imp <- fit_model(mnar_eq_same, update(base_fmla, d_y_mean_imp ~ .))
+mnar_eq_diff_mean_imp <- fit_model(mnar_eq_diff, update(base_fmla, d_y_mean_imp ~ .))
+mnar_ne_same_mean_imp <- fit_model(mnar_ne_same, update(base_fmla, d_y_mean_imp ~ .))
+mnar_ne_diff_mean_imp <- fit_model(mnar_ne_diff, update(base_fmla, d_y_mean_imp ~ .))
+
+dat_4 %>% 
+  filter(time == 2) %>%
+  group_by(analysis) %>%
+  mutate(pct_bias = (.fitted - d_y) / d_y * 100) %>%
+  summarize(M_bias = mean(pct_bias))
+
+calc_bias <- function(dat) {
+  dat %>%
+    filter(time == 2) %>%
+    mutate(pct_bias = (.fitted - d_y) / d_y * 100) %>%
+    summarize(M_bias = mean(pct_bias)) %>%
+    pluck("M_bias", 1)
+}
+
+mnar_eq_same_mean_imp_bias <- calc_bias(mnar_eq_same_mean_imp)
+mnar_eq_diff_mean_imp_bias <- calc_bias(mnar_eq_diff_mean_imp)
+mnar_ne_same_mean_imp_bias <- calc_bias(mnar_ne_same_mean_imp)
+mnar_ne_diff_mean_imp_bias <- calc_bias(mnar_ne_diff_mean_imp)
+
+  
+```
+
+
+```{r}
+
+
+
+
+
+fit_mean_imp <- function(dat) {
+  gls(
+    y_mean_imp ~ t * grp, 
+    correlation = corSymm(form = ~1|id),
+    weights = varIdent((form = ~1|t)),
+    na.action = na.exclude,
+    data = dat
+  )
+}
+
+mcar_eq_same_mean_imp <- mcar_eq_same %>%
+  nest(data = -sim) %>%
+  mutate(
+    mdl = map(data, ~ gls(y_mean_imp ~ t * grp, 
+                          correlation = corSymm(form = ~1|id),
+                          weights = varIdent((form = ~1|t)),
+                          na.action = na.exclude,
+                          data = .)),
+    pred = map(mdl, predict),
+    aug = map2(data, pred, ~ bind_cols(.x, data.frame(.fitted_value = .y)))
+  )
+
+x <- mcar_eq_sam_nested %>%
+  unnest(aug) %>%
+  select(-c(mdl, pred, data))
+x %>% group_by(sim) %>% summarize(bias = mean((.fitted_value - y_mean_imp) / y_mean_imp, na.rm = TRUE)) %>%
+  summarize(M_bias = mean(bias))
+
+# x <- mcar_eq_sam_nested[1, ]$mdl[[1]]
+# predict(x)
+# nlme::gls(
+#   model = y ~ t * grp,
+#   correlation = nlme::corSymm(form = ~1|id),
+#   weights = nlme::varIdent((form = ~1|t)),
+#   na.action = na.exclude,
+#   data = mcar_eq_sam)
+# str(mar_ne_sam)
+# nrow(mar_ne_sam)
+```
+
+
+
+# References
+
+<a id="Bell"></a>Bell, M. L., Kenward, M. G., Fairclough, D. L., & Horton, N. J. (2013). Differential dropout and bias in randomised controlled trials: when it matters and when it may not. BMJ (Clinical research ed.), 346, e8668. https://doi.org/10.1136/bmj.e8668. 
+[html](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4688419/).
+
+

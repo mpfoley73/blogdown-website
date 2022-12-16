@@ -1,0 +1,50 @@
+---
+title: Differential Dropout Bias
+author: Michael Foley
+date: '2022-12-09'
+slug: []
+categories: []
+tags: []
+description: ''
+topics: []
+---
+
+
+
+<p>Participant dropout in a longitudinal study is a potential source of bias. However, Bell (<a href="#Bell">2013</a>) shows differential dropout does not always bias results.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<p>The knitr package controls the height and width of the figure with options <code>fig.height=5</code> and <code>fig.width=7</code> where 5 and 7 are default values measure in inches. If you have a lot of content</p>
+<pre class="r"><code>base_dat &lt;- expand.grid(id = 1:200, time = 0:2) %&gt;%
+  mutate(
+    group = factor(if_else(id &lt;= 100, 0, 1)),
+    time = factor(time, levels = c(0, 1, 2))
+  ) %&gt;%
+  arrange(id, time)
+
+beta1 &lt;- c(50, -3.5, -7.0, 1, (1 / 3.5))
+
+linear_decline &lt;- base_dat %&gt;%
+  mutate(y = beta1[1] + 
+           (beta1[2] * (time == 1)) * if_else(group == 0, beta1[4], beta1[5]) + 
+           (beta1[3] * (time == 2)) * if_else(group == 0, beta1[4], beta1[5]))
+
+linear_decline %&gt;% ggplot(aes(x = as.numeric(time) - 1, y = y)) +
+  geom_line(aes(linetype = group)) +
+  scale_y_continuous(limits = c(40, 52), n.breaks = 7)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="504" /></p>
+<pre class="r"><code>beta2 &lt;- c(50, -4, -3, 1, (7 / 4))
+
+temporary_change &lt;- base_dat %&gt;%
+  mutate(y = beta1[1] + 
+           (beta2[2] * (time == 1)) + (if_else(group == 1, -3, 0) * (time == 1)) + 
+           (beta2[3] * (time == 2)) + (if_else(group == 1, 5, 0) * (time == 2)))
+ 
+temporary_change %&gt;% ggplot(aes(x = as.numeric(time) - 1, y = y)) +
+  geom_line(aes(linetype = group)) +
+  scale_y_continuous(limits = c(40, 52), n.breaks = 7)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-2.png" width="504" /></p>
+<div id="references" class="section level1">
+<h1>References</h1>
+<p><a id="Bell"></a>Bell, M. L., Kenward, M. G., Fairclough, D. L., &amp; Horton, N. J. (2013). Differential dropout and bias in randomised controlled trials: when it matters and when it may not. BMJ (Clinical research ed.), 346, e8668. <a href="https://doi.org/10.1136/bmj.e8668" class="uri">https://doi.org/10.1136/bmj.e8668</a>.
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4688419/">html</a>.</p>
+</div>
