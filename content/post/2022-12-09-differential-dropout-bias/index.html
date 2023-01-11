@@ -7,42 +7,319 @@ categories: []
 tags: []
 description: ''
 topics: []
+output:
+  html_document:
+    code_folding: hide
 ---
 
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<p>Participant dropout in a longitudinal study is a potential source of bias. However, Bell (<a href="#Bell">2013</a>) shows differential dropout does not always bias results.</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<p>The knitr package controls the height and width of the figure with options <code>fig.height=5</code> and <code>fig.width=7</code> where 5 and 7 are default values measure in inches. If you have a lot of content</p>
-<pre class="r"><code>base_dat &lt;- expand.grid(id = 1:200, time = 0:2) %&gt;%
-  mutate(
-    group = factor(if_else(id &lt;= 100, 0, 1)),
-    time = factor(time, levels = c(0, 1, 2))
-  ) %&gt;%
-  arrange(id, time)
-
-beta1 &lt;- c(50, -3.5, -7.0, 1, (1 / 3.5))
-
-linear_decline &lt;- base_dat %&gt;%
-  mutate(y = beta1[1] + 
-           (beta1[2] * (time == 1)) * if_else(group == 0, beta1[4], beta1[5]) + 
-           (beta1[3] * (time == 2)) * if_else(group == 0, beta1[4], beta1[5]))
-
-linear_decline %&gt;% ggplot(aes(x = as.numeric(time) - 1, y = y)) +
-  geom_line(aes(linetype = group)) +
-  scale_y_continuous(limits = c(40, 52), n.breaks = 7)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="504" /></p>
-<pre class="r"><code>beta2 &lt;- c(50, -4, -3, 1, (7 / 4))
-
-temporary_change &lt;- base_dat %&gt;%
-  mutate(y = beta1[1] + 
-           (beta2[2] * (time == 1)) + (if_else(group == 1, -3, 0) * (time == 1)) + 
-           (beta2[3] * (time == 2)) + (if_else(group == 1, 5, 0) * (time == 2)))
- 
-temporary_change %&gt;% ggplot(aes(x = as.numeric(time) - 1, y = y)) +
-  geom_line(aes(linetype = group)) +
-  scale_y_continuous(limits = c(40, 52), n.breaks = 7)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-2.png" width="504" /></p>
+<p>Participant dropout is a potential source of bias in longitudinal studies. However, Bell (<a href="#Bell">2013</a>) showed differential dropout doesn’t always bias results, and sometimes non-differential dropout <em>does</em> bias results. The solution in all cases is a mixed model. Bell demonstrated this with a simulation using a fictional data set. Bell created 10,000 data sets with perturbations meant to simulate between-person and within-person effects. I created 100 data sets to explore the paper for this post.</p>
+<p>Suppose a clinical trial assesses quality of life (QoL) at three time points (0, 1, and 2) for <em>n</em> = 200 participants with a degenerative disease. The participants are divided into a treatment and placebo group. All participants start with a QoL of 50 at time = 0. Their QoL degrades as the disease progresses. Some participants in each group drop out of the study, potentially at different rates and for different reasons. The process might look like this.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Bell perturbed the data generating process that produced the two time series above by adding random values from a normal distribution. Bell created between-person effects by adding the same value to each time stage for a person, and within-person effects by applying a different value at each time stage.</p>
+<p>Here’s how a the 100 perturbations might look for a control and a treatment participant.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Missing data can be classified as</p>
+<ul>
+<li><strong>Missing completely at random</strong> (MCAR). Dropout is unrelated to the covariates or to the prior values, so there are no systematic group differences.</li>
+<li><strong>Missing at random</strong> (MAR). Dropout is not random, but you can measure and control for its causes, so the remaining dropout <em>is</em> random.</li>
+<li><strong>Missing not at random</strong> (MNAR). Dropout is not random, and you cannot control its causes.</li>
+</ul>
+<p>Dropout is MCAR if the participant drops out of a study for reasons having nothing to do with the study. Otherwise, it’s MAR or MNAR. You can detect MCAR by comparing the dropouts’ and completers’ measurements. MCAR will have similar starting values and progressions (slopes).</p>
+<p>Researchers sometimes handle missingness by only considering complete cases, or imputing with the last observed value carried forward (LOCF) or mean value, but these methods introduce bias. If your data is MCAR or MAR, likelihood based mixed models for repeated measures can yield unbiased estimates of the treatment effect. These models use information from participants with complete data to implicitly impute the missing values.</p>
+<div id="demonstation-with-simulations" class="section level1">
+<h1>Demonstation with Simulations</h1>
+<p>Bell simulated MCAR, MAR, and MNAR by removing data points from the simulation data sets in two ways: by dropout <em>rate</em> (equal vs differing) between the control and treatment group, and by <em>direction</em> in response to QoL (same vs opposite). There are four combinations of the causes. Three missingness reasons times four patterns equals twelve simulations, each repeated 10,000 times (100 for me).</p>
+<div id="mcar" class="section level3">
+<h3>MCAR</h3>
+<ul>
+<li><strong>Rate</strong>. Equal rates (30%) for each group, or differing rates (control = 40%, treatment = 20%).</li>
+<li><strong>Direction</strong>. Same response to a low QoL at lag-1 time (low relative to the overall avg at lag-1 time), or different response (control more likely to drop out if &lt; avg, treatment more likely if &gt; avg).</li>
+</ul>
+</div>
+<div id="mar" class="section level3">
+<h3>MAR</h3>
+<ul>
+<li><strong>Rate</strong>. Equal rates (30%) for each group, but dependent on QoL relative to the <em>group</em> average at the lag-1 time, or differing rates (40%/20%).</li>
+<li><strong>Direction</strong>. Same or different response, but dependent on the <em>group</em> average.</li>
+</ul>
+</div>
+<div id="mnar" class="section level3">
+<h3>MNAR</h3>
+<ul>
+<li>Same as MAR, but comparing the <em>current</em> QoL to the group average at lag-1 time instead.</li>
+</ul>
+<p>Here is what MCAR, MAR, and MNAR might look like for those two participants above.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+</div>
+<div id="simulation-analysis" class="section level1">
+<h1>Simulation Analysis</h1>
+<p>Bell fit a linear regression model of QoL ~ group * time for each simulated data set. In my case, that comes to 4 variations of direction and rate * 4 modeling approaches * 3 missingness types * 100 sims = 4,800 model fits. For each fit, augment the data set with the fitted values. Then calculate the average fitted value at time = 2 across the 100 simulations, and compare it to the average actual value. Bias is the percent difference between the measured and actual.</p>
+<p>The results are shown in the table below. The my measured bias differs a lot from Bell in magnitude, but the mixed model agrees in its improvement on bias.</p>
+<table style="width:100%; margin-left: auto; margin-right: auto;" class="table">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Same direction
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Different direction
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+Equal<br>30%
+</th>
+<th style="text-align:right;">
+20% treat,<br>40% ctrl
+</th>
+<th style="text-align:right;">
+Equal<br>30%
+</th>
+<th style="text-align:right;">
+20% treat,<br>40% ctrl
+</th>
+</tr>
+</thead>
+<tbody>
+<tr grouplength="4">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>MCAR</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Complete case
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean imputation
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+LOCF
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mixed
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr grouplength="4">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>MAR</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Complete case
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean imputation
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+LOCF
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mixed
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr grouplength="4">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>MNAR</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Complete case
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean imputation
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+LOCF
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mixed
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>Participant dropout can bias results, but not necessarily. Imputation or taking complete cases is not a viable option for handling participant dropout. The safest approach is to used a mixed model.</p>
+</div>
 <div id="references" class="section level1">
 <h1>References</h1>
 <p><a id="Bell"></a>Bell, M. L., Kenward, M. G., Fairclough, D. L., &amp; Horton, N. J. (2013). Differential dropout and bias in randomised controlled trials: when it matters and when it may not. BMJ (Clinical research ed.), 346, e8668. <a href="https://doi.org/10.1136/bmj.e8668" class="uri">https://doi.org/10.1136/bmj.e8668</a>.
