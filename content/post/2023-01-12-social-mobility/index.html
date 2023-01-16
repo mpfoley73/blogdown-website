@@ -1,0 +1,28 @@
+---
+title: Low Socioeconomic Background may Slow Career Advancement
+author: Michael Foley
+date: '2023-01-12'
+slug: []
+categories: []
+tags:
+  - Diversity
+description: ''
+topics: []
+---
+
+
+
+<p>Career advancement is one way to measure inclusion in an organization. In a five-year study of its employees, KPMG found that socioeconomic background was the strongest determinant of progression, stronger than gender, ethnicity, disability, and sexual orientation. The pdf report is available <a href="https://assets.kpmg/content/dam/kpmg/uk/pdf/2022/12/social-mobility-progression-report-2022-mind-the-gap-brochure.pdf">here</a>. KPMG’s largest socioeconomic gap was in the average time to progress from Manager to Senior Manager. Employees raised in lower socioeconomic conditions took 19% longer to advance. I screen captured the associated info-graphic below. You can get 19% from 2.6 and 2.3 if you presume rounding: 2.649 / 2.225 - 1 = 19%. That comes to about a five month gap (27 vs 22). KPMG measured almost no gap at the lowest grade transition (4%, 1 month). The Asst. Mgr. to Manager gap was 10%; Sr Manager to Director was 5%; and Director to Partner was <em>negative</em> 8%.</p>
+<p><img src="images/Screenshot%202023-01-13%20051429.png" width="600" /></p>
+<p>You might wonder what constitutes low and high socioeconomic background. KPMG followed the guidance of the <a href="https://home.kpmg/uk/en/home/media/press-releases/2022/12/social-class-is-the-biggest-barrier-to-career-progression.html">Bridge Group and Social Mobility Commission in 2021</a>. If the occupation of the highest earner in your household when you were age 14 was in a professional or intermediate background, you have a higher socioeconomic background. If the occupation was manual or blue-collar, then you have a lower socioeconomic background.</p>
+<p>I ran a simulation to estimate the effect of a persistent 19% promotion rate gap. Suppose you start a company and hire 100 people per month. Half of your hires have a lower socioeconomic background and half have a higher socioeconomic background. Each month employees have a probability of promoting equal to a normal distribution centered at either 2.225 years or 2.649 years, depending on socioeconomic background. I assumed a standard deviation of 6 months. In my simulation, employees leave the company after five years, so after five years headcount is steady at 100 hir/mo * 12 mos/yr * 5 yrs = 6,000 emps.</p>
+<p>Here’s what representation looks like over time. It’s initially noisy, but converges toward a steady state of about 53% high socioeconomic background and 47% low socioeconomic background.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>KPMG concludes this is evidence of bottlenecks into middle-management. This ideas is similar to the “broken rung” hypothesis posited by McKenzie &amp; Company in 2019 (<a href="https://www.mckinsey.com/~/media/McKinsey/Featured%20Insights/Gender%20Equality/Women%20in%20the%20Workplace%202019/Women-in-the-workplace-2019.ashx#:~:text=Source%3A%202019%20McKinsey%20%26%20Company%20and%20LeanIn.Org%20Women,%E2%80%9Cbroken%20rung%E2%80%9D%20is%20the%20key%20to%20achieving%20parity.">pdf</a>).</p>
+<p>A few other ideas from the report:</p>
+<ul>
+<li><p>KPMG is addressing the challenge with programs designed to advance targeted groups into leadership roles.</p></li>
+<li><p>The issue is related to ideas about living wage and net disposable income.</p></li>
+<li><p>The issue is also related to ideas about marginalization of less-educated workers in the economy (see <a href="https://www.richmondfed.org/publications/research/econ_focus/2021/q1/district_digest">this</a>).</p></li>
+<li><p>KPMG started a Social Mobility employee resource group. Most resource groups target biases directed toward groups marginalized by their physical appearance. Socioeconomic background is an exception.</p></li>
+</ul>
