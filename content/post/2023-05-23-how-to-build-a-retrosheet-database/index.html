@@ -1,0 +1,278 @@
+---
+title: Build a Retrosheet Database with R
+author: Michael Foley
+date: '2023-05-23'
+slug: []
+categories:
+  - Tutorial
+tags: []
+description: ''
+topics: []
+---
+
+
+
+<p><a href="https://www.retrosheet.org/">Retrosheet</a> is one of several sources of detailed baseball statistics.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> It is unique in that it is the only one (that I know of) that curates play-by-play event files of games. Their event files reach back to 1914. Unlike other sources that summarize teams or games, these files summarize individual plays all the way down to pitch sequences. For example, I used my database to find out whether changing pitchers mid-inning is related to game duration. Might be!</p>
+<p><img src="images/sample_plot.png" width="336" /></p>
+<p>The downside is that the event files are not readily incorporated into a data analysis. There is quite a bit of work to transform the data. Mat Kovach published a database <a href="https://www.pitcherlist.com/retrosheet-play-by-play-data-at-your-fingertips/">here</a>, but I decided to build my own. These notes show you how to do it too. When you’re done you will have a MySQL database with six tables:</p>
+<p><img src="images/mysql-db.png" /></p>
+<ul>
+<li><strong>game</strong>. One row per game. Column defs <a href="https://chadwick.readthedocs.io/en/latest/cwgame.html">here</a>.</li>
+<li><strong>game_event</strong>. One row per play. Column defs <a href="https://chadwick.readthedocs.io/en/latest/cwevent.html">here</a></li>
+<li><strong>player_sub</strong>. One row per player substitution (pitch-hitters, pitching changes, etc.). Column defs <a href="https://chadwick.readthedocs.io/en/latest/cwsub.html">here</a></li>
+<li><strong>team_roster</strong>, <strong>team</strong>, and <strong>event_lu</strong>. Look-up tables</li>
+</ul>
+<div id="software-requirements" class="section level1">
+<h1>Software requirements</h1>
+<p>Retrosheet publishes regular season event files <a href="https://www.retrosheet.org/game.htm">here</a>. Each zipped season file contains game logs organized into a single file per home team. There are also look-up files for each team’s roster. That’s about 60 files per season that need to be transformed and combined. It’s a lot of data. My Retrosheet database has 15 million rows and 160 columns. Plus there are tables summarizing games and player substitutions. It’s way to much data to load into working memory, so it needs to live in a database. I installed a MySQL database and loaded it with an R script that runs a program named Chadwick.</p>
+<p><strong>Chadwick</strong>. The Retrosheet event files are ASCII text, but are not in a regular row-col format. Chadwick is a group of executable files that convert Retrosheet event files into a regular csv format which you can then upload into a database.</p>
+<p><strong>MySQL</strong>. The resources I relied on to learn how to build my database all used different databases (see References). I chose MySQL, a freely available, open-source database.</p>
+<p>Okay, now that you know what you’re in for, let’s get started.</p>
+</div>
+<div id="step-1-install-chadwick" class="section level1">
+<h1>Step 1: Install Chadwick</h1>
+<p>Chadwick is a collection of command-line utility programs that convert Retrosheet files from DiamondWare format to csv. The programs are written in C and compiled into binaries for distribution.</p>
+<p>Download <strong>chadwick-0.10.0-win.zip</strong> (or latest version for your OS) from <a href="https://github.com/chadwickbureau/chadwick/releases">Chadwick GitHub repository</a>, then extract the files. I unzipped mine into a subdirectory of my mlb-games repo since this is the only place I’ll use it.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<p><img src="images/chadwick.png" /></p>
+<p>That’s all you need to do to install Chadwick unless you want to use Chadwick with the <strong>baseballr</strong> package as was done <a href="https://billpetti.github.io/2019-08-10-build-retrosheet-event-roster-database-rstats-baseballr/">here</a>.<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+</div>
+<div id="step-2-install-and-configure-mysql" class="section level1">
+<h1>Step 2: Install and configure MySQL</h1>
+<p>I recommend MySQL database because it is popular, easy to use, and it worked for me. However, there were a few steps.</p>
+<pre><code>2.1. Install Microsoft Visual C++ runtime libraries
+2.2. Download and install MySQL
+2.3. Configure MySQL</code></pre>
+<p><strong>2.1. Install Microsoft Visual C++ runtime libraries</strong>. MySQL requires Microsoft Visual C++ runtime libraries. I didn’t have that, but with help from <a href="https://www.youtube.com/watch?v=w3PczJEiKpQ">this video</a>, I installed it from <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170">Microsoft</a>. I won’t repeat the instructions here - just follow the video.</p>
+<p><strong>2.2. Download and install MySQL</strong>. Go to <a href="https://www.mysql.com">mysql.com</a> and click “Downloads” to download MySQL. Navigate to <a href="https://dev.mysql.com/downloads/">MySQL Community (GPL) Downloads</a> &gt; <a href="https://dev.mysql.com/downloads/windows/">MySQL Installer for Windows</a>. Download the desktop version (larger of the two downloads).</p>
+<p><img src="images/mysql.png" width="750px" /></p>
+<p>Open the MySQL Installer and choose the Developer Default setup type. This will install the MySQL Server, Workbench front-end, and database connectors.</p>
+<p><img src="images/mysql-install.png" /></p>
+<p>You can follow along with the <a href="https://www.youtube.com/watch?v=qqLJm9wIuvw">TechGraphs YouTube video</a> starting at the 20 minute mark, but basically you are clicking “Next &gt;” a bunch of times.<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> You need to establish a database server password on the Accounts and Roles tab. This is a local database, so don’t worry about security. I used “password”.</p>
+<p><strong>2.3. Configure MySQL</strong>. By default, MySQL does not allow client applications like RStudio to insert data into the database. The issue seems to be related to the security risk of allowing a script to execute malicious code. You need to remove this restriction. In the comment section of <a href="https://dba.stackexchange.com/questions/48751/enabling-load-data-local-infile-in-mysql">this stack exchange thread</a> are instructions. I edited my <code>mi.ini</code> file, located in the hidden ProgramData directory, and added three lines.</p>
+<p><img src="images/myini.png" width="750px" /></p>
+</div>
+<div id="step-3-load-the-database-with-r" class="section level1">
+<h1>Step 3: Load the database with R</h1>
+<p>I originally did this with the <a href="https://billpetti.github.io/baseballr/"><strong>baseballr</strong></a> R package, but ran into a problem. The Chadwick programs accept command-line flags that customize the columns it includes in the data. I wanted the <a href="https://chadwick.readthedocs.io/en/latest/cwevent.html">extended column list</a>, and <a href="https://chadwick.readthedocs.io/en/latest/cwsub.html">player substitution table</a>, but <strong>baseballr</strong> doesn’t seem to let you add the command-line flags. So I just wrote <a href="https://github.com/mpfoley73/mlb-games/blob/main/src/01_get_retro_event_data.R">my own script</a>. It’s not really a big deal anyway. You can follow the link to GitHub, but I’m also pasting the code below so we can walk through it.</p>
+<p>Start by loading the standard libraries. You’ll need odbc to connect to your MySQL instance. I do not have a path variable for the Chadwick program, so instead I am just defining its directory in the code. I use <code>retro_yrs</code> to loop over each season, downloading and processing one season at a time. You might start with just one year or a couple as you test and tweak the code.</p>
+<pre class="r"><code>library(tidyverse)
+library(odbc)
+library(glue)
+library(readxl)
+
+chadwick_dir &lt;- &quot;C:\\Users\\mpfol\\OneDrive\\Documents\\GitHub\\mlb-games\\assets\\chadwick&quot;
+retro_yrs &lt;- 1914:2022
+wd &lt;- getwd()</code></pre>
+<p>Above I captured my working directory, because I temporarily change it process the data. The next step is to download each season’s zip file. The naming convention is [YYYY]eve.zip. Remember, there’s about 60 files per zip, so you are going to have a massive amount of files after this step. This step took about 15 seconds per season, so a half hour total to download all seasons.</p>
+<pre class="r"><code>event_dir &lt;- file.path(wd, &quot;data/retrosheet/event&quot;)
+setwd(event_dir)
+for (season in retro_yrs) {
+  zip_fn &lt;- glue(&quot;{season}eve.zip&quot;)
+  zip_path &lt;- file.path(event_dir, zip_fn)
+  download.file(url = glue(&quot;https://www.retrosheet.org/events/{zip_fn}&quot;), 
+                destfile = zip_path)
+  unzip(zipfile = zip_path, exdir = event_dir)
+  shell(glue(&quot;del {zip_fn}&quot;))
+}</code></pre>
+<p>Now run Chadwick to convert each seasons 60 or so files into three csv files you can upload into a database.</p>
+<ul>
+<li><strong>event[YYYY].csv</strong>. This is the big one - one row per game event. Column defs <a href="https://chadwick.readthedocs.io/en/latest/cwevent.html">here</a>.</li>
+<li><strong>sub[YYYY].csv</strong>. Player substitution detail - one row per substitution. Column defs <a href="https://chadwick.readthedocs.io/en/latest/cwsub.html">here</a></li>
+<li><strong>game[YYYY].csv</strong>. Game summaries - one row per game. Column defs <a href="https://chadwick.readthedocs.io/en/latest/cwgame.html">here</a></li>
+</ul>
+<p>The code below also formats a couple files into csv for upload.</p>
+<ul>
+<li><strong>roster[YYYY].csv</strong>. Team roster look-up table - one row per season/team/player.</li>
+<li><strong>team[YYYY].csv</strong>. Team look-up table - one row per season/team.</li>
+</ul>
+<p>The documentation in the above links also explains how you set the flags in the command-line calls. When this step is done, those 60 files per season will be gone, and instead you’ll have five files per season.</p>
+<pre class="r"><code>setwd(event_dir)
+roster_col_names &lt;- c(&quot;PLAYER_ID&quot;, &quot;LAST_NAME&quot;, &quot;FIRST_NAME&quot;, &quot;BATS&quot;, &quot;THROWS&quot;, 
+                      &quot;TEAM_ID&quot;, &quot;POS&quot;)
+roster_col_types &lt;- str_c(&quot;ccccccc&quot;)
+team_col_names &lt;- c(&quot;TEAM_ID&quot;, &quot;LEAGUE_ID&quot;, &quot;TEAM_CITY&quot;, &quot;TEAM_NAME&quot;)
+team_col_types &lt;- c(&quot;cccc&quot;)
+for (season in retro_yrs) {
+  # Create event[YYYY].csv.
+  cwevent_cmd &lt;- glue(&quot;{file.path(chadwick_dir, &#39;cwevent&#39;)} -y {season} -f 0-96 &quot;,
+                      &quot;-x 0-60 -q -n {season}*.EV* &gt; event{season}.csv&quot;)
+  shell(cwevent_cmd)
+  # Create sub[YYYY].csv.
+  cwsub_cmd &lt;- glue(&quot;{file.path(chadwick_dir, &#39;cwsub&#39;)} -y {season} -q -n &quot;,
+                    &quot;{season}*.EV* &gt; sub{season}.csv&quot;)
+  shell(cwsub_cmd)
+  # Create game[YYYY].csv.
+  cwgame_cmd &lt;- glue(&quot;{file.path(chadwick_dir, &#39;cwgame&#39;)} -y {season} -f 0-83 -x&quot;,
+                     &quot;0-96 -q -n {season}*.EV* &gt; game{season}.csv&quot;)
+  shell(cwgame_cmd)
+  # Create roster[YYYY].csv from individual team files. File names are like 
+  # CLE1973.ROS, one for each team.
+  roster_fn &lt;- list.files(pattern = glue(&quot;\\.*{season}\\.ROS$&quot;))
+  roster_df &lt;- map_df(roster_fn, ~read_csv(., col_names = roster_col_names, 
+                                           col_types = roster_col_types))
+  data.table::fwrite(roster_df, glue(&quot;roster{season}.csv&quot;))
+  # Create team[YYYY].csv from TEAM[YYYY]. 
+  team_fn &lt;- glue(&quot;TEAM{season}&quot;)
+  team_df &lt;- read_csv(team_fn, col_names = team_col_names, col_types = team_col_types)
+  data.table::fwrite(team_df, glue(&quot;team{season}.csv&quot;))
+  # Clean up
+  shell(glue(&quot;del {season}*.EV*&quot;))
+  shell(glue(&quot;del *{season}.ROS&quot;))
+  shell(glue(&quot;del TEAM{season}&quot;))
+}</code></pre>
+<p>Now we’re ready to insert the csv files into the SQL Server database. I probably should have incorporated the database loading code into the loop above. That would have avoid writing the files to csv, then turning around and reading them back in. I did it this way mostly because I was solving one problem at a time.</p>
+<p>The database connection object is pretty standard. I don’t think you would need to change anything, unless you chose a differnt user or password.</p>
+<pre class="r"><code>setwd(event_dir)
+retrosheet_conn &lt;- dbConnect(
+  RMySQL::MySQL(),
+  dbname = &quot;retrosheet&quot;,
+  host = &quot;localhost&quot;,
+  port = 3306,
+  user = &quot;root&quot;,
+  password = &quot;password&quot; 
+)
+event_col_types &lt;- str_c(
+  &quot;ccdddddcddcccccccccccccccccccclldddlldlldlldlldcll&quot;,
+  &quot;cddcdcdcdddddccclllllllllccclllllccccdddddddddd&quot;, # 97 standard fields
+  &quot;cccdlldddddllddllcclldddddddddcccdddddddddddddclllldddddddddd&quot; # 61 extended fields
+)
+sub_col_types &lt;- str_c(&quot;cddcdddcdd&quot;)
+game_col_types &lt;- str_c(
+  &quot;cddcdlcccccccccclldcccclddddddddddddddddddccclcdcd&quot;,
+  &quot;cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcccclldlllccdddddd&quot;,
+  &quot;ddddddddddddddddddddddddddddddddddddddddddddllllll&quot;,
+  &quot;llllccccccccccccccccccccccclldl&quot;
+)
+for (season in retro_yrs) {
+  event_df  &lt;- read_csv(glue(&quot;event{season}.csv&quot;),  col_types = event_col_types)
+  sub_df    &lt;- read_csv(glue(&quot;sub{season}.csv&quot;),    col_types = sub_col_types)
+  game_df   &lt;- read_csv(glue(&quot;game{season}.csv&quot;),   col_types = game_col_types)
+  roster_df &lt;- read_csv(glue(&quot;roster{season}.csv&quot;), col_types = roster_col_types)
+  team_df   &lt;- read_csv(glue(&quot;team{season}.csv&quot;),   col_types = team_col_types)
+  # Add year_id col and change column name case to lower.
+  event_df  &lt;- event_df  %&gt;% janitor::clean_names(&quot;snake&quot;) %&gt;% 
+    mutate(year_id = season) %&gt;% select(game_id, event_id, year_id, everything())
+  sub_df    &lt;- sub_df    %&gt;% janitor::clean_names(&quot;snake&quot;) %&gt;% 
+    mutate(year_id = season) %&gt;% select(game_id, event_id, year_id, everything())
+  game_df   &lt;- game_df   %&gt;% janitor::clean_names(&quot;snake&quot;) %&gt;% 
+    mutate(year_id = season) %&gt;% select(game_id, year_id, everything())
+  roster_df &lt;- roster_df %&gt;% janitor::clean_names(&quot;snake&quot;) %&gt;% 
+    mutate(year_id = season) %&gt;% select(team_id, year_id, player_id, everything())
+  team_df   &lt;- team_df   %&gt;% janitor::clean_names(&quot;snake&quot;) %&gt;% 
+    mutate(year_id = season) %&gt;% select(team_id, year_id, everything())
+  # Write to db
+  dbWriteTable(retrosheet_conn, &quot;game_event&quot;,  event_df,  append = TRUE, 
+               overwrite = FALSE, row.names = FALSE)
+  dbWriteTable(retrosheet_conn, &quot;player_sub&quot;,  sub_df,    append = TRUE, 
+               overwrite = FALSE, row.names = FALSE)
+  dbWriteTable(retrosheet_conn, &quot;game&quot;,        game_df,   append = TRUE, 
+               overwrite = FALSE, row.names = FALSE)
+  dbWriteTable(retrosheet_conn, &quot;team_roster&quot;, roster_df, append = TRUE, 
+               overwrite = FALSE, row.names = FALSE)
+  dbWriteTable(retrosheet_conn, &quot;team&quot;,        team_df,   append = TRUE, 
+               overwrite = FALSE, row.names = FALSE)
+  print(glue(&quot;{season}: {scales::comma(nrow(event_df), 1)} event, &quot;,
+             &quot;{scales::comma(nrow(sub_df), 1)} sub, &quot;,
+             &quot;{scales::comma(nrow(roster_df), 1)} roster, &quot;,
+             &quot;{scales::comma(nrow(game_df), 1)} game, &quot;,
+             &quot;{scales::comma(nrow(team_df), 1)} team.&quot;))
+  shell(glue(&quot;del event{season}.csv&quot;))
+  shell(glue(&quot;del sub{season}.csv&quot;))
+  shell(glue(&quot;del game{season}.csv&quot;))
+  shell(glue(&quot;del roster{season}.csv&quot;))
+  shell(glue(&quot;del team{season}.csv&quot;))
+}
+
+setwd(wd)</code></pre>
+<p>There is one more step. I noticed a couple data issues that I fixed. Then I created some indexes for performance, following the lead from <a href="https://billpetti.github.io/2019-08-10-build-retrosheet-event-roster-database-rstats-baseballr/">Bill Petti’s post</a>. I also added an event lookup table. I copied the “Event type code (field 34)” table from the <a href="https://chadwick.readthedocs.io/en/latest/cwevent.html">Chadwick documentation</a> into Excel, then loaded it.</p>
+<pre class="r"><code>dbSendStatement(retrosheet_conn, &quot;update game set minutes_game_ct = NULL where minutes_game_ct = 0&quot;)
+dbSendStatement(retrosheet_conn, &quot;update game set attend_park_ct  = NULL where attend_park_ct  = 0&quot;)
+# Add lookups. Got this from https://chadwick.readthedocs.io/en/latest/cwevent.html.
+lu_df &lt;- read_xlsx(file.path(event_dir, &quot;code_lookup.xlsx&quot;))
+colnames(lu_df) &lt;- c(&quot;event_cd&quot;, &quot;event_tx&quot;)
+dbWriteTable(retrosheet_conn, &quot;event_lu&quot;,  lu_df, overwrite = TRUE, append = FALSE, row.names = FALSE)
+# Create indexes per recommendation from
+# https://billpetti.github.io/2019-08-10-build-retrosheet-event-roster-database-rstats-baseballr/
+dbSendStatement(retrosheet_conn, &quot;alter table game add primary key (game_id(12))&quot;)
+dbSendStatement(retrosheet_conn, &quot;alter table game_event add primary key (game_id(12), event_id)&quot;)
+dbSendStatement(retrosheet_conn, &quot;alter table team add primary key (team_id(3), year_id)&quot;)
+# Problem with team_roster PK: dup record.
+dbSendStatement(retrosheet_conn, &quot;delete from team_roster where team_id = &#39;OAK&#39; and year_id = 2006 and player_id = &#39;kigem001&#39; and pos = &#39;X&#39;&quot;)
+dbSendStatement(retrosheet_conn, &quot;alter table team_roster add primary key (team_id(3), year_id, player_id(8))&quot;)
+# (no unique key for player_sub)
+dbSendStatement(retrosheet_conn, &quot;create index sub_game_event on player_sub (game_id(12), event_id)&quot;)
+dbSendStatement(retrosheet_conn, &quot;alter table event_lu add primary key (event_cd)&quot;)
+# Other indexes for performance
+dbSendStatement(retrosheet_conn, &#39;create index game_year on game (year_id)&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index event_year on game_event (year_id)&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index roster_year on team_roster (year_id)&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index sub_year on player_sub (year_id)&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index team_year on team (year_id)&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index event_game_id on game_event (game_id(12))&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index event_home_team_id on game_event (home_team_id(5))&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index event_away_team_id on game_event (away_team_id(5))&#39;)
+dbSendStatement(retrosheet_conn, &#39;create index event_event_cd on game_event (event_cd)&#39;)</code></pre>
+<p><br></p>
+</div>
+<div id="conclusion-using-mysql" class="section level1">
+<h1>Conclusion: Using MySQL</h1>
+<p>That’s it. Now that you have your Retrosheet database, you can query it from R to feed your analysis. Here’s how I created that plot at the top of this post.</p>
+<pre class="r"><code>library(odbc)
+library(tidyverse)
+
+retrosheet_conn &lt;- dbConnect(
+  RMySQL::MySQL(),
+  dbname = &quot;retrosheet&quot;,
+  host = &quot;localhost&quot;,
+  port = 3306,
+  user = &quot;root&quot;,
+  password = &quot;password&quot; 
+)
+
+pitcher_chgs &lt;- dbGetQuery(
+  retrosheet_conn,
+  &quot;select 
+	  e.year_id, 
+	  sum(case when e.inn_pa_ct &gt; 0 then 1 else 0 end) as mid_inn_chgs 
+  from (select year_id, game_id, event_id, inn_pa_ct from retrosheet.game_event) e
+	  inner join (select game_id, event_id from retrosheet.player_sub where removed_fld_cd = 1) s   
+      on e.game_id = s.game_id and e.event_id = s.event_id 
+  group by e.year_id 
+  order by e.year_id&quot;
+)
+
+innings &lt;- dbGetQuery(
+  retrosheet_conn,
+  &quot;select year_id, sum(inn_ct) innings, sum(minutes_game_ct) mins from game group by year_id&quot;
+)
+
+inner_join(pitcher_chgs, innings, by = join_by(year_id)) %&gt;%
+  mutate(
+    `Mid-inning pitching chages` = mid_inn_chgs / innings * 9,
+    `Hours per game` = mins / 60 / innings * 9
+  ) %&gt;%
+  pivot_longer(cols = c(`Mid-inning pitching chages`, `Hours per game`)) %&gt;%
+  ggplot(aes(x = year_id, y = value, color = name)) + geom_line() +
+  theme_light() +
+  theme(legend.position = &quot;top&quot;) +
+  labs(x = NULL, y = NULL, color = NULL)</code></pre>
+<p><img src="images/sample_plot.png" width="336" /></p>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<p>I mainly relied on the two sources below to set up my Retrosheet event database and prepare this tutorial.</p>
+<p>TechGraphs posted a <a href="https://techgraphs.fangraphs.com/tag/retrosheet/">two-part video series</a> on YouTube in 2016. Some steps differ from what I’ve done, but there are lots of insights peppered throughout that will make you more comfortable with the whole process.</p>
+<p>Bill Petti posted <a href="https://billpetti.github.io/2019-08-10-build-retrosheet-event-roster-database-rstats-baseballr/">this article</a> in 2019. The baseballr R package replaces some of the work from 2016. The post leaves out some set-up steps related to the Chadwick software and database installation.</p>
+<p><a href="https://www.pitcherlist.com/retrosheet-play-by-play-data-at-your-fingertips/">This post</a> by Matt Kovach talks about the value of a Retrosheet database and explains how you might use it. Matt doesn’t explain how to build the database, but it’s a good overview of why you might want to create one.</p>
+<p>Chadwick’s <a href="https://chadwick.readthedocs.io/en/latest/index.html">documentation</a>.</p>
+<p>MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/option-files.html">documentation</a> about setting options.</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Others I’ve used are the Lahman database, the MLB API, and Baseball Reference.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>I added <code>assets/chadwick/</code> to my .gitignore file though.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>You can use the baseballr R package to download and process files, but it does not handle player substitutions. If you decide to go that route, you will have one other step. To make the programs visible to <strong>baseballr</strong>, add the directory to your path environment variable. From the Windows Start menu, search for <em>Path</em>. That pulls up the <em>System Properties</em> panel. Click <em>Environment Variables</em> and edit the <em>Path</em> variable. Add your directory to the path list.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>This is one of two TechGraphs videos <a href="https://techgraphs.fangraphs.com/tag/retrosheet/">posted here</a> that I reviewed for this post. They are from 2016, so some of what they do is no longer required (particularly, <strong>baseballr</strong> handles the part about downloading and parsing the Retrosheet files.)<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
