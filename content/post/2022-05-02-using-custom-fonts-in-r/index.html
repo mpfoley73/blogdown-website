@@ -12,18 +12,17 @@ featuredpath: '../../post/2022-05-02-using-custom-fonts-in-r'
 featuredstretch: 'cover'
 ---
 
-<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
 <p>For my new survival analysis project on <a href="https://mpfoley73.github.io/baseball-survival/">baseball career longevity</a>, I am using the TR Plaza font <a href="https://www.cleveland.com/entertainment/2022/04/cleveland-guardians-adopt-refreshed-design-look-to-go-with-new-name.html">adopted by the Cleveland Guardians</a> for the 2022 season. Style choices shouldn’t be gratuitous, but I feel like using the Guardians font for my graphics connects statistical analysis to the underlying topic of baseball. Anyway, it’s cool, so I’m doing it.</p>
 <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;">
 <div id="before" class="section level3">
 <h3>Before</h3>
-<p><img src="images/plot_before.png" /></p>
+<p><img src="images/plot_before.png" width="350px" /></p>
 </div>
 <div id="after" class="section level3">
 <h3>After</h3>
-<p><img src="images/plot_after.png" /></p>
+<p><img src="images/plot_after.png" width="350px" /></p>
 </div>
 </div>
 <p>I ran into difficulties adding the font, so I’m capturing the process here to smooth the way for you and for future me. These instructions explain how to change the font face used in your R graphics. It does not change the text output.</p>
@@ -48,7 +47,7 @@ ggplot(mtcars, aes(x=wt, y=mpg)) +
   geom_point() +
   ggtitle(&quot;TR Plaza font!&quot;) +
   theme(text = element_text(size = 16, family=&quot;TR Plaza&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>The key is setting the <code>family</code> argument of the <code>element_text()</code> function. How do you know what string to use? The name that appears in your MS Word font selection seems to always work. You can see the registered fonts with <code>extrafont::fonts()</code>, or even more detail with <code>extrafont::fonttable()</code>.</p>
 <pre class="r"><code>fonts() %&gt;% .[1:6] # just the first 6
 ## [1] &quot;Agency FB&quot;             &quot;Algerian&quot;              &quot;Arial Black&quot;          

@@ -25,13 +25,19 @@ For my new survival analysis project on [baseball career longevity](https://mpfo
 ::: {}
 ### Before
 
-![](./images/plot_before.png)
+```{r out.width = "350px", echo=FALSE}
+knitr::include_graphics("images/plot_before.png")
+```
+
 :::
 
 ::: {}
 ### After
 
-![](./images/plot_after.png)
+```{r out.width = "350px", echo=FALSE}
+knitr::include_graphics("images/plot_after.png")
+```
+
 :::
 
 ::::
