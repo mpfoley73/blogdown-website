@@ -1,0 +1,94 @@
+---
+title: Rock Breaks Scissors
+author: Michael Foley
+date: '2023-11-06'
+slug: []
+categories:
+  - Tutorial
+tags: []
+description: ''
+topics: []
+---
+
+
+
+<p>William Poundstone’s <em>Rock Breaks Scissors</em> (<a href="https://www.amazon.com/Rock-Breaks-Scissors-Outguessing-Outwitting/dp/0316228052">Amazon</a>) shows how people are often predictable in their efforts to be random. For instance, from the title, a good strategy for playing <em>Rocks, Paper, Scissors</em> is to start with <em>paper</em> because your opponent is likely to lead with the aggressive <em>rock</em>. The insights are neat throughout, but I’m especially delighted with the simple applications of probability. Let’s play with a few from the chapter on Chapanis’s random number experiment</p>
+<p>Chapanis was a noted industrial designer who worked at Bell Labs in the 1950s. His experiment asked students to write a sequence of 2,520 random digits. Chapanis analyzed how random the sequences actually were. I conducted a mini experiment on myself, writing down 300 random numbers before succumbing to tedium.</p>
+<pre class="r"><code>chapanis &lt;- str_c(
+  &quot;19654378094657264109869482380864380216091452609914526179532427948267049319418&quot;,
+  &quot;648091694823753689014549318621563892675943217458272872395417642800142238774519&quot;,
+  &quot;632514589321792045916134219574162598769412430289014826723940183921825732087428&quot;,
+  &quot;3109924132384210891423614279413976455277149716169314281753649812435&quot;
+)</code></pre>
+<p>If the sequence is random, the digit frequencies should have a binomial distribution with <em>p</em> = 1/10. You expect noise, but this is too much noise.</p>
+<pre class="r"><code>tibble(num = 0:9, n = str_count(chapanis, as.character(c(0:9)))) %&gt;%
+  mutate(p = n / sum(n)) %&gt;%
+  ggplot(aes(x = num, y = p)) + 
+  geom_col() +
+  geom_text(aes(label = n), nudge_y = -.01, color = &quot;white&quot;) +
+  scale_x_continuous(breaks = 0:9) +
+  scale_y_continuous(labels = percent_format()) +
+  geom_hline(yintercept = .10, linetype = 2)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Look at digit 0. I wrote it only 18 times (6%). The expected value is 30 (10%). Astonishingly, the least chosen digit by just about everyone in Chapanis’s study was 0 - even the way I was non-random was non-random! The probability of writing only 18 zeros in a sequence of 300 digits is &lt;1%.</p>
+<pre class="r"><code>pbinom(q = 18, size = 300, prob = 1/10)</code></pre>
+<pre><code>## [1] 0.009712619</code></pre>
+<p>If I really chose digits randomly, 95% of experiments like this would yield between 20 and 41 zeros, so I’m on the tail, but to far down it.</p>
+<pre class="r"><code>qbinom(p = c(.025, .975), size = 300, prob = 1/10)</code></pre>
+<pre><code>## [1] 20 41</code></pre>
+<p>It gets better. Chapanis noticed predictable sequences of numbers too. Participants were unlikely to repeat numbers back to back presumably because that feels non-random. On the other hand, descending sequences like “32” and “21” were over-used. Was that true for me?</p>
+<pre class="r"><code># Convert my 300 digit string into a list of 299 2-digit strings.
+my_pairs &lt;- map_chr(1:(str_length(chapanis)-1), ~str_sub(chapanis, ., . + 1)) 
+
+# Frequencies of 2-digit combinations, including combinations I didn&#39;t use.
+my_freq &lt;- tibble(
+  digit_pairs = str_pad(as.character(0:99), 2, &quot;left&quot;, &quot;0&quot;),
+  freq = map_dbl(digit_pairs, ~sum(my_pairs == .))
+  )</code></pre>
+<p>There were 13 pairs of numbers I did not write at all. I didn’t write many zeros, so that accounts for five of the 13, but sure enough, five repeated digits are in the list.</p>
+<pre class="r"><code>my_freq %&gt;% filter(freq == 0) %&gt;% pull(digit_pairs)</code></pre>
+<pre><code>##  [1] &quot;03&quot; &quot;05&quot; &quot;06&quot; &quot;07&quot; &quot;11&quot; &quot;29&quot; &quot;33&quot; &quot;44&quot; &quot;47&quot; &quot;50&quot; &quot;66&quot; &quot;85&quot; &quot;88&quot;</code></pre>
+<p>Only 7 of my 13 most frequently written pairs were descending.</p>
+<pre class="r"><code>my_freq %&gt;% 
+  mutate(
+    d1 = str_sub(digit_pairs, 1, 1),
+    d2 = str_sub(digit_pairs, 2, 2),
+    comp = case_when(d1 &gt; d2 ~ &quot;Descending&quot;, d1 &lt; d2 ~ &quot;Ascending&quot;, TRUE ~ &quot;Repeating&quot;)
+  ) %&gt;%
+  summarize(.by = comp, freq = sum(freq)) %&gt;%
+  mutate(pct = freq / sum(freq))</code></pre>
+<pre><code>## # A tibble: 3 × 3
+##   comp        freq    pct
+##   &lt;chr&gt;      &lt;dbl&gt;  &lt;dbl&gt;
+## 1 Repeating      7 0.0234
+## 2 Ascending    142 0.475 
+## 3 Descending   150 0.502</code></pre>
+<p>The distribution differs from the expected 10% repeats, 45% ascending, 45% descending.</p>
+<pre class="r"><code>chisq.test(x = c(7, 142, 150), p = c(.10, .45, .45))</code></pre>
+<pre><code>## 
+## 	Chi-squared test for given probabilities
+## 
+## data:  c(7, 142, 150)
+## X-squared = 19.725, df = 2, p-value = 5.208e-05</code></pre>
+<p>If the digit sequence was random, it should not be possible to predict the next digit in the sequence with more than 1/10 accuracy. However, Chapanis could guess then next digit 17% of the time. Using the prior two digits improved his accuracy to 28%. For me, the prior digit predicted the next digit 22% of the time, and the prior two digits predicted the next digit 31% of the time.</p>
+<pre class="r"><code>dat &lt;- tibble(y = str_split_1(chapanis, &quot;&quot;), l1 = lag(y, 1), l2 = lag(y, 2)) %&gt;%
+  mutate(across(everything(), factor))
+
+multinom_reg() %&gt;%
+  set_engine(&quot;nnet&quot;) %&gt;%
+  fit(y ~ l1, data = dat) %&gt;%
+  augment(new_data = dat) %&gt;%
+  summarize(M = mean(.pred_class == y, na.rm = TRUE))</code></pre>
+<pre><code>## # A tibble: 1 × 1
+##       M
+##   &lt;dbl&gt;
+## 1 0.221</code></pre>
+<pre class="r"><code>multinom_reg() %&gt;%
+  set_engine(&quot;nnet&quot;) %&gt;%
+  fit(y ~ l1 + l2, data = dat) %&gt;%
+  augment(new_data = dat) %&gt;%
+  summarize(M = mean(.pred_class == y, na.rm = TRUE))</code></pre>
+<pre><code>## # A tibble: 1 × 1
+##       M
+##   &lt;dbl&gt;
+## 1 0.312</code></pre>
