@@ -1,0 +1,153 @@
+---
+title: Build a Chatbot in Shiny
+author: Michael Foley
+date: '2024-01-21'
+slug: []
+categories:
+  - Tutorial
+tags:
+  - chatbot
+  - R
+  - Shiny
+  - OpenAI
+description: ''
+topics: []
+---
+
+
+
+<style type="text/css">
+img {
+  width: 67%;
+  float: right;
+  padding: 5px 0px 15px 15px;
+}
+pre.r {
+  color: #cccccc;
+  background: #444444;
+}
+</style>
+<p>I created a chatbot in Shiny by coding along with <a href="https://www.youtube.com/@james-h-wade">James Wade’s</a> three-part YouTube tutorial series (<a href="https://www.youtube.com/watch?v=d7l4EZYlZE0">#1</a>, <a href="https://www.youtube.com/watch?v=agPFcEeQSEQ">#2</a>, and <a href="https://www.youtube.com/watch?v=odBkUdWlwUk">#3</a>), and added ideas I learned from Alejandro AO’s <a href="https://www.youtube.com/watch?v=dXxQ0LR-3Hg">embedding tutorial</a> in python.</p>
+<p><img src="images/portfolio_chatbot.png" /></p>
+<p>You can try it out on <a href="https://mpfoley73.shinyapps.io/R-Chatbot/">shinyapps.io</a>. Unfortunately, the OpenAI API service is not free. I pay a fraction of a penny for every call to it, but the pennies add up. I made the API key a setting the user must enter. If you don’t already have an OpenAI key, you can sign up at <a href="https://openai.com/pricing">OpenAI</a>. More on that below.</p>
+<p>This was my first Shiny project and first LLM project, so this tutorial is truly novice level. I’ll highlight important code chunks, but you can find the raw source code on <a href="https://github.com/mpfoley73/r-chatbot">GitHub</a>. There are three hurdles to get your chatbot up and running: i) interface with an API using <strong>httr2</strong>, in particular, ii) OpenAI’s ChatGPT API, and iii) create Shiny web app. Let’s go through this slowly, starting with OpenAI and ChatGPT</p>
+<div id="openai-and-chatgpt" class="section level2">
+<h2>OpenAI and ChatGPT</h2>
+<p>OpenAI is an artificial intelligence research organization that has released several large language models (LLMs), including GPT-3 (2020), 3.5 (2022), and 4 (2023). The models have variants that differ in their complexity and cost.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. <code>gpt-3.5-turbo</code> is currently much cheaper than the new <code>gpt-4</code>. Also be aware of <code>text-embedding-ada-002</code>, used for processing your data into a form you can use for your own ML algorithms.</p>
+<p><img src="images/chatgpt.png" /></p>
+<p>You are probably already familiar with the ChatGPT web interface to the GPT models at <a href="https://chat.openai.com" class="uri">https://chat.openai.com</a>. Once you can create an account, the free plan lets you access <code>gpt-3.5-turbo</code>.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> I use the web interface to write code, summarize technical text, and and get answers to questions I used to pose to Google. OpenAI’s API exposes the same models for you to employ in your programs and web applications.</p>
+<p>Using your same OpenAI credentials, log in at <a href="https://platform.openai.com/" class="uri">https://platform.openai.com/</a>, then go to <strong>Settings &gt; Billing</strong> to purchase credits. The credits are deducted for each call to the API. Most messages I’ve posted to the API cost less than a penny, but it depends on the complexity of the task and the model you access, so take a look at their <a href="https://openai.com/pricing">pricing page</a> for details. $20 of credits would have been plenty for me to do this project, except I started experimenting with the expensive newer models and ran through my credit balance and had to purchase more.</p>
+<p><img src="images/openai-api-key.png" /></p>
+<p>Now that you have some credits to spend, create your API key. The API key is your authentication mechanism to interact with the API. Keep it private - don’t embed it in your code, save it to GitHub, or put it anywhere someone can find and drain your credit balance. I saved my key to a .Renviron file in my R project, then added .Renviron to my .gitignore file so GitHub does not track it and no one can see it. I’ll explain that in the next section. Let’s create the key. Go to API keys in the left side menu and click “+ Create a new secret key”. You only need one, but I can imagine creating a separate key for each project you build so you can track usage. I called mine “Toy ChatGPT”. That’s all there is to it. Keep the key value handy so you can put it into the chatbot we’re about to make. Otherwise, we’re done at OpenAI. Let’s jump into R Studio and create the Shiny app.</p>
+</div>
+<div id="create-a-shiny-app-project-in-r-studio" class="section level2">
+<h2>Create a Shiny App Project in R Studio</h2>
+<p><img src="images/shiny-project.png" /></p>
+<p>With API key in hand, we’re ready to create the chatbot project in RStudio. In R Studio, open <strong>File &gt; New Project &gt; New Directory &gt; Shiny Application</strong>. I named my project “r-chatbot”.</p>
+<p>Now that we have a project, let’s save the API key to a file. From the RStudio console, create a project-level .Renviron file using the <strong>usethis</strong> package: <code>usethis::edit_r_environ(scope = "project")</code> pulls up and editor for your project-level .Renviron file. I set a value for <code>OPENAI_API_KEY</code> (which I’ve redacted for this post) and another called <code>FOLEY_KEY</code> (which I also redacted). This way, I can let the user enter their own API key instead of using up my precious credits. The value for <code>FOLEY_KEY</code> is something simple and memorable. When I use my chatbot, I can enter my <code>FOLEY_KEY</code> value and my app will translate it into the <code>OPENAI_API_KEY</code>, so I don’t have to manually look it up.</p>
+<pre class="r"><code>OPENAI_API_KEY=&quot;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&quot;
+FOLEY_KEY=&quot;XXXXX&quot;</code></pre>
+<p>W also need to add this file to .gitignore. I used the preconfigured .ignore from the R project. Key line is here:</p>
+<pre class="r"><code># R Environment Variables
+.Renviron</code></pre>
+</div>
+<div id="the-app" class="section level2">
+<h2>The App</h2>
+<p>I’ll keep the focus on the OpenAI ApI integration rather than on the fundamentals of Shiny app development, especially since I am the last person to be giving pointers on Shiny. But hey, I got my app running, so let’s capture at least the minimum of what you need to know to get this off the ground.</p>
+<p>I followed along with James Wade’s videos to get my bot running. You should probably do the same. Then I circled back and read <em>some</em> of Hadley Wickham’s <a href="https://mastering-shiny.org/">Mastering Shiny</a> to better understand what I just did. Then I changed my original code to experiment with what I just learned.</p>
+<p>Notice two files in my GitHub project directory: <a href="https://github.com/mpfoley73/r-chatbot/blob/main/app.R">app.R</a> contains the framework for the app, and while it is not strictly required that you call it app.R, that is the convention and the default name shinyapps.io uses; chatbot.r contains the code specific to our bot logic. Let’s take a quick tour of app.R.</p>
+<p>There are three components to app.R. The first is an object, usually named <code>ui</code>, that defines the screen layout. James Wade uses <code>page_sidebar()</code> to create the object, but the basic way to do it is with <code>fluidPage()</code>, so that’s what I stuck with. I pass in some settings inputs first, and then the important part is the call to <code>tabsetPanel()</code> which creates a tabset like in Rmarkdown. The two tabs, Settings and Chat!, are defined by <code>tabPanel()</code>. The <code>wellPanel()</code> call will hold the chat history in an area of fixed dimensions with a scrollbar. The last thing to note is that each of the inputs and outputs functions start with a string label that becomes the input handle to access its values. E.g., values entered into the textbox defined by <code>textAreaInput("user_content", ...)</code> can then be referenced as <code>input$user_content</code>.</p>
+<pre class="r"><code>ui &lt;- fluidPage(
+  tags$head(
+    tags$link(rel = &quot;stylesheet&quot;, type = &quot;text/css&quot;, href = &quot;chat_style.css&quot;)
+  ),
+  titlePanel(&quot;Chatbot with R and OpenAI&quot;),
+  theme = bs_theme(bootswatch = &quot;united&quot;),
+  tabsetPanel(
+    tabPanel(
+      &quot;Settings&quot;,
+      p(&quot;&quot;),
+      textInput(&quot;api_key&quot;, label = &quot;API Key&quot;),
+      selectInput(&quot;model&quot;, label = &quot;Model&quot;, choices = c(&quot;gpt-3.5-turbo&quot;, &quot;gpt-4&quot;)),
+      selectInput(&quot;task&quot;, label = &quot;Task&quot;, choices = c(&quot;general&quot;, &quot;code&quot;))
+    ),
+    tabPanel(
+      &quot;Chat!&quot;,
+      p(&quot;&quot;),
+      wellPanel(
+        style = &quot;height: 400px; width: 600px; overflow-y: auto;&quot;,
+        uiOutput(&quot;chat_history&quot;)
+      ),
+      p(&quot;&quot;),
+      textAreaInput(&quot;user_content&quot;, label = NULL, width = &quot;600&quot;,
+                     placeholder = &quot;Enter your message...&quot;),
+      actionButton(&quot;chat&quot;, label = NULL, icon = icon(&quot;paper-plane&quot;),
+                   width = &quot;80px&quot;,
+                   class = &quot;m-2 btn-secondary&quot;)
+    )
+  )
+)</code></pre>
+<p>The second component to app.R is a function definition named <code>server()</code>. It defines how the input and output objects interact. They key lines are the calls to <code>chat()</code> and <code>update_history()</code>. <code>chat()</code> passes the submitted prompt along with the conversation history into the OpenAI API. <code>update_history()</code> appends the OpenAI response to the conversation history.</p>
+<pre class="r"><code>server &lt;- function(input, output) {
+  chat_history &lt;- reactiveVal()
+  # Wrap the server logic in observe() attached to the actionButton with
+  # bindEvent().
+  observe({
+    # Require that the user has typed something into the textbox. If the user
+    # clicks the action button with empty user_content, nothing happens.
+    req(input$user_content != &quot;&quot;)
+    response &lt;- chat(
+      user_content = input$user_content,
+      chat_history = chat_history(),
+      chat_model = input$model,
+      chat_task = input$task,
+      api_key = input$api_key
+    )
+    # chat_history is a reactive value. To update date it, pipe the updated
+    # history into it as if it were a function.
+    update_history(chat_history(), input$user_content, response) |&gt; chat_history()
+    # Write to the `chat_history` uiOutput
+    output$chat_history &lt;- renderUI(map(chat_history(), \(x) markdown(glue(&quot;{x$content}&quot;))))
+  }) |&gt; bindEvent(input$chat)
+}</code></pre>
+<p>The last component is simply a call to <code>shinyApp()</code>.</p>
+<pre class="r"><code>shinyApp(ui = ui, server = server)</code></pre>
+</div>
+<div id="the-bot" class="section level2">
+<h2>The Bot</h2>
+<p>The logic to interface with OpenAI is surprisingly simple. chatbot.R contains all the logic. My <code>chat()</code> function assembles the system prompt, chat history, and the user prompt into a new message for the API. The system prompt sets the context for the user’s message. It can be anything, but the idea is to have a repeatable text block that always gets passed in so the user doesn’t have to set the context. My system prompt depends on the value of the <code>input$task</code> element. The call to the API is a single statement. It’s long, but not difficult. All of these <code>req...()</code> functions are from the <strong>httr2</strong> package. The first two set the API endpoint. Then the API token and other identifying information is attached. <code>req_body_json()</code> attaches the message. It takes a single argument, <code>data</code> that is a list of lists. This part is specific to the API, so you just have to go through their documentation or copy someone else’s code like I did (James Wade). The <code>req_retry()</code> and <code>req_throttle()</code> define out network and server issues are handled, and <code>req_perform()</code> sends it off. Notice <code>req_dry_run()</code> commented out - it’s a good diagnostic tool to show you waht <code>req_perform()</code> is about to send.</p>
+<pre class="r"><code>resp &lt;-
+  request(&quot;https://api.openai.com/v1&quot;) |&gt;
+  req_url_path_append(&quot;chat/completions&quot;) |&gt;
+  req_auth_bearer_token(token = api_key) |&gt;
+  req_headers(&quot;Content-Type&quot; = &quot;application/json&quot;) |&gt;
+  req_user_agent(&quot;Mike Foley @mpfoley73 | Toy Project&quot;) |&gt;
+  req_body_json(data = list(model = chat_model, messages = chat_messages)) |&gt;
+  req_retry(max_tries = 4) |&gt;
+  req_throttle(rate = 15) |&gt;
+  # httr2::req_dry_run()
+  req_perform()</code></pre>
+<p>The next two lines of code handle the response from OpenAI. Again, you have to consult the documentation to learn where the actual content is.</p>
+<pre class="r"><code>openai_chat_response &lt;- resp |&gt; resp_body_json(simplifyVector = TRUE)
+
+openai_chat_response$choices$message$content</code></pre>
+<p>The last part of chatbot.R updates the history by concatenating the existing history with the new response from OpenAI.</p>
+<pre class="r"><code>update_history &lt;- function(chat_history, user_content, response) {
+  c(chat_history,
+    list(
+      list(role = &quot;user&quot;, content = str_replace(user_template, &quot;MESSAGE_TEXT&quot;, user_content)),
+      list(role = &quot;assistant&quot;, content = str_replace(bot_template, &quot;MESSAGE_TEXT&quot;, response))
+    )) |&gt;
+    purrr::compact()
+}</code></pre>
+<p>With app.R and chatbot.R defined, you can run the Shiny app by clicking the Run App button in the panel header. Assuming you are happy with it, click the blue Publish button to its right to publish the app to shinyapps.io.</p>
+<p><img src="images/run-app.png" /></p>
+<p><a href="https://mpfoley73.shinyapps.io/R-Chatbot/">My final chatbot</a> includes avatars for the bot and the user. Adding bells and whistles is a good way to deepen your understanding.</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Neoteric posted a nice overview <a href="https://neoteric.eu/blog/gpt-4-vs-gpt-3-openai-models-comparison/#:~:text=GPT%2D3%20is%20a%20language,its%20remarkable%20language%20generation%20capabilities.">here</a>.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>The <code>gpt-4</code> model is available for $20/month.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
