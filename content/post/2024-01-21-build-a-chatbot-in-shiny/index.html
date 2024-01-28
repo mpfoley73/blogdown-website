@@ -16,17 +16,6 @@ topics: []
 
 
 
-<style type="text/css">
-img {
-  width: 67%;
-  float: right;
-  padding: 5px 0px 15px 15px;
-}
-pre.r {
-  color: #cccccc;
-  background: #444444;
-}
-</style>
 <p>I created a chatbot in Shiny by coding along with <a href="https://www.youtube.com/@james-h-wade">James Wade’s</a> three-part YouTube tutorial series (<a href="https://www.youtube.com/watch?v=d7l4EZYlZE0">#1</a>, <a href="https://www.youtube.com/watch?v=agPFcEeQSEQ">#2</a>, and <a href="https://www.youtube.com/watch?v=odBkUdWlwUk">#3</a>), and added ideas I learned from Alejandro AO’s <a href="https://www.youtube.com/watch?v=dXxQ0LR-3Hg">embedding tutorial</a> in python.</p>
 <p><img src="images/portfolio_chatbot.png" /></p>
 <p>You can try it out on <a href="https://mpfoley73.shinyapps.io/R-Chatbot/">shinyapps.io</a>. Unfortunately, the OpenAI API service is not free. I pay a fraction of a penny for every call to it, but the pennies add up. I made the API key a setting the user must enter. If you don’t already have an OpenAI key, you can sign up at <a href="https://openai.com/pricing">OpenAI</a>. More on that below.</p>
@@ -143,6 +132,17 @@ openai_chat_response$choices$message$content</code></pre>
 <p>With app.R and chatbot.R defined, you can run the Shiny app by clicking the Run App button in the panel header. Assuming you are happy with it, click the blue Publish button to its right to publish the app to shinyapps.io.</p>
 <p><img src="images/run-app.png" /></p>
 <p><a href="https://mpfoley73.shinyapps.io/R-Chatbot/">My final chatbot</a> includes avatars for the bot and the user. Adding bells and whistles is a good way to deepen your understanding.</p>
+<style type="text/css">
+img {
+  width: 67%;
+  float: right;
+  padding: 5px 0px 15px 15px;
+}
+pre.r {
+  color: #cccccc;
+  background: #444444;
+}
+</style>
 </div>
 <div class="footnotes footnotes-end-of-document">
 <hr />

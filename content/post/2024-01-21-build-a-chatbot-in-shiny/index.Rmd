@@ -14,18 +14,6 @@ description: ''
 topics: []
 ---
 
-```{css, echo=FALSE}
-img {
-  width: 67%;
-  float: right;
-  padding: 5px 0px 15px 15px;
-}
-pre.r {
-  color: #cccccc;
-  background: #444444;
-}
-```
-
 I created a chatbot in Shiny by coding along with [James Wade's](https://www.youtube.com/@james-h-wade) three-part YouTube tutorial series ([#1](https://www.youtube.com/watch?v=d7l4EZYlZE0), [#2](https://www.youtube.com/watch?v=agPFcEeQSEQ), and [#3](https://www.youtube.com/watch?v=odBkUdWlwUk)), and added ideas I learned from Alejandro AO's [embedding tutorial](https://www.youtube.com/watch?v=dXxQ0LR-3Hg) in python. 
 
 ![](images/portfolio_chatbot.png)
@@ -188,3 +176,16 @@ With app.R and chatbot.R defined, you can run the Shiny app by clicking the Run 
 ![](images/run-app.png)
 
 [My final chatbot](https://mpfoley73.shinyapps.io/R-Chatbot/) includes avatars for the bot and the user. Adding bells and whistles is a good way to deepen your understanding.
+
+```{css, echo=FALSE}
+img {
+  width: 67%;
+  float: right;
+  padding: 5px 0px 15px 15px;
+}
+pre.r {
+  color: #cccccc;
+  background: #444444;
+}
+```
+
