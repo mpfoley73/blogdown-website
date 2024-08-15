@@ -1,0 +1,117 @@
+---
+title: Deploying a Deep Learning Model
+author: Michael Foley
+date: '2024-07-21'
+slug: []
+categories:
+  - ML
+  - Tutorial
+tags: []
+description: ''
+topics: []
+---
+
+
+
+<style>
+    img:hover {
+        transform: scale(1.05);
+    }
+</style>
+<p>Today I fine tuned an image recognition deep learning model, created a web interface with Gradio, and deployed it on Hugging Face Spaces. This project was the subject of lesson 2 of fast.ai’s <a href="https://course.fast.ai/">Deep Learning for Coders</a> course.</p>
+<div id="fine-tuning-a-model-in-kaggle" class="section level2">
+<h2>1. Fine-tuning a Model in Kaggle</h2>
+<p>Deep learning models need to train on a GPU (Graphics Processing Unit) because CPUs are too slow. I followed fast.ai’s recommendation to use Kaggle (Google Colab, AWS, and Microsoft Azure) are popular alternatives. Kaggle was particularly convenient because I was able to find a curated dataset there. After logging into Kaggle, I searched for “dog breed image” and came across <a href="https://www.kaggle.com/datasets/khushikhushikhushi/dog-breed-image-dataset">this one</a> posted by Khushi. I clicked “New Notebook” to create a project with the data already loaded into the environment.</p>
+<p><img src="kaggle-dataset.png" width="700" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border: 2px solid #ccc; transition: transform 0.2s;"></p>
+<p>It’s in the Input &gt; Datasets section of <a href="https://www.kaggle.com/code/mpfoley73/dog-breed-classification">my notebook</a>. The full path is <code>/kaggle/input/dog-breed-image-dataset</code>.</p>
+<p><img src="kaggle-notebook.png" width="700" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border: 2px solid #ccc; transition: transform 0.2s;"></p>
+<p>My notebook follows <a href="https://github.com/fastai/fastbook/blob/master/02_production.ipynb">chapter 2</a> of the fast.ai book. My notebook is self-documented, so I won’t step through each cell. But the upshot is that fast.ai provides a super-convenient framework for fitting a model. There is not much code in my notebook. Here are the highlights though:</p>
+<p>Using fast.ai’s <code>DataBlock()</code> method, I created a DataLoader object that defines how manage the data: how it is structured, how to create the train/test split, any required transformations, etc. I used the object to load the dog breed data set, then passed it into <code>vision_learner()</code> to create a learner object and fine tune a ResNet-18 model on the data with <code>fine_tune()</code>. The model can then predict on new images using the <code>predict()</code> method. Now that the model was fine-tuned, I exported it to a pickle file with the <code>export()</code> method. I downloaded the pickle file from Kaggle to my laptop.</p>
+<pre><code>from fastai.vision.all import *
+
+parent_dir = &#39;/kaggle/input/dog-breed-image-dataset/dataset&#39;
+
+dogs = DataBlock(
+    blocks=(ImageBlock, CategoryBlock), 
+    get_items=get_image_files, 
+    splitter=RandomSplitter(valid_pct=0.2, seed=42),
+    get_y=parent_label,
+    item_tfms=[RandomResizedCrop(224, min_scale=0.5)],
+    batch_tfms=aug_transforms()
+)
+
+dls = dogs.dataloaders(parent_dir)
+
+learn = vision_learner(dls, resnet18, metrics=error_rate)
+
+learn.fine_tune(4)
+
+learn.predict(&#39;/kaggle/input/dog-breed-image-dataset/dataset/Beagle/Beagle_1.jpg&#39;)
+
+learn.export(&#39;dog_breed_classifier.pkl&#39;)</code></pre>
+</div>
+<div id="from-notebook-to-app-with-gradio" class="section level2">
+<h2>2. From Notebook to App with Gradio</h2>
+<p>Gradio is a Python library that allows you to quickly create user-friendly web interfaces for machine learning models. You can create an interface in just a few lines of code. Tanishq Abraham posted <a href="https://www.tanishq.ai/blog/posts/2021-11-16-gradio-huggingface.html">an article</a> walking through the steps. Here is my experience.</p>
+<p>I created a folder on my laptop and copied in the pickle file I had downloaded. I also grabbed a photo of Chester to use as an example.</p>
+<p>I opened VS Code and created a new file named app.py. The full file is on <a href="https://huggingface.co/spaces/mpfoley73/fastai_dog_breed_classifier/blob/main/app.py">Hugging Face</a>, but here is the stripped down code:</p>
+<pre><code>import gradio as gr
+from fastai.vision.all import *
+import skimage
+import pathlib
+
+# Uncomment this for local (Windows) development.
+# Reference: https://stackoverflow.com/questions/57286486/i-cant-load-my-model-because-i-cant-put-a-posixpath
+#
+# posix_backup = pathlib.PosixPath
+# try:
+#     pathlib.PosixPath = pathlib.WindowsPath
+#     learn = load_learner(&#39;dog_breed_classifier.pkl&#39;)
+# finally:
+#     pathlib.PosixPath = posix_backup
+#
+# Uncomment this for Hugging Face
+learn = load_learner(&#39;dog_breed_classifier.pkl&#39;)
+
+labels = learn.dls.vocab
+def predict(img):
+    img = PILImage.create(img)
+    pred,pred_idx,probs = learn.predict(img)
+    return {labels[i]: float(probs[i]) for i in range(len(labels))}
+
+title = &quot;Dog Breed Classifier&quot;
+description = &quot;A dog breed classifier trained on the Dog Breed dataset with fastai. Created as a demo for Gradio and HuggingFace Spaces.&quot;
+article=&quot;&lt;p style=&#39;text-align: center&#39;&gt;&lt;a href=&#39;https://mpfoley73.netlify.app/post/2024-07-21-deploying-a-deep-learning-model/&#39; target=&#39;_blank&#39;&gt;Blog post&lt;/a&gt;&lt;/p&gt;&quot;
+examples = [&#39;chester_14.jpg&#39;]
+
+gr.Interface(
+    fn=predict,
+    inputs=gr.Image(),
+    outputs=gr.Label(),
+    title=title,
+    description=description,
+    article=article,
+    examples=examples
+).launch()</code></pre>
+<p>If you compare my code to Tanishq’s blog, you will notice some small differences related to changes in the <code>gradio</code> library. Also, notice the comment block that reconciles the path differences between Hugging Face and my laptop. When you run the script, you get a notification in the terminal like this:</p>
+<pre><code>PS C:\Users\mpfol\OneDrive\Documents\GitHub\fastai_dog_breed_classifier&gt; &amp; C:/Users/mpfol/AppData/Local/Microsoft/WindowsApps/python3.11.exe c:/Users/mpfol/OneDrive/Documents/GitHub/fastai_dog_breed_classifier/app.py
+Running on local URL:  http://127.0.0.1:7860
+
+To create a public link, set `share=True` in `launch()`.</code></pre>
+<p>VS Code has spawned a local web site to run the app. Open the link!</p>
+<p><img src="gradio-app.png" width="700" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border: 2px solid #ccc; transition: transform 0.2s;"></p>
+</div>
+<div id="from-local-app-to-hugging-face" class="section level2">
+<h2>3. From Local App to Hugging Face</h2>
+<p>The last step is to publish the app to Hugging Face Spaces so that it is publicly viewable. Continuing with Tanishq’s tutorial, I created an account at Hugging Face, then created a new Space. This is essentially a git repository on Hugging Face. I called my space <code>fastai_dog_breed_classifier</code>.</p>
+<p>In VS Code, I opened the Terminal and changed directory into by GitHub repos area. Then I cloned the repo.</p>
+<pre><code>PS C:\Users\mpfol\OneDrive\Documents\GitHub&gt; git clone https://huggingface.co/spaces/mpfoley73/fastai_dog_breed_classifier  </code></pre>
+<p>The Hugging Face <a href="https://huggingface.co/docs/hub/repositories-getting-started#terminal">Getting Started with Repositories</a> article explains that you need <code>git-lfs</code> for large files like our pickle file.</p>
+<pre><code>PS C:\Users\mpfol\OneDrive\Documents\GitHub&gt; git lfs install</code></pre>
+<p>I copied my <code>app.py</code>, the pickle file, and Chester’s photo into my local GitHub directory. Then I committed the whole thing and pushed it up to Hugging Face.</p>
+<pre><code>PS C:\Users\mpfol\OneDrive\Documents\GitHub\fastai_dog_breed_classifier&gt; git commit -am &quot;initial commit&quot;
+PS C:\Users\mpfol\OneDrive\Documents\GitHub\fastai_dog_breed_classifier&gt; git push</code></pre>
+<p>The Hugging Face repo is <a href="https://huggingface.co/spaces/mpfoley73/fastai_dog_breed_classifier/tree/main">here</a>. After pushing the commit, Hugging Face immediately began deploying my app <a href="https://huggingface.co/spaces/mpfoley73/fastai_dog_breed_classifier">here</a>.</p>
+<p>And that was all I needed to do!</p>
+<p><em>A final note: this actually took me over 10 hours spread over a few weeks. Almost nothing worked right without a lot of time and hair pulling. My notes make it seem simple, but it’s only simple after you’re done. Thank you, fastai, and Tanishq, and the other online resources!</em></p>
+</div>
