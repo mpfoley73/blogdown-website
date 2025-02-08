@@ -1,0 +1,176 @@
+---
+title: Cleveland's Increasing Racial/ethnic Diversity
+author: Michael Foley
+date: '2025-02-08'
+slug: []
+categories:
+  - Tutorial
+tags:
+  - R
+description: 'A look at the 2020 Census.'
+topics: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(glue)
+library(scales)
+library(gt)
+library(ggiraph)  # interactive plots
+
+library(tidycensus)
+library(tigris) # TIGER/Line shapefiles
+library(sf)  # simple features for spatial analysis
+```
+
+```{r eval=FALSE}
+base_url <- "https://raw.githubusercontent.com/mpfoley73/playground/master/census/"
+
+download.file(file.path(base_url, "decennial_2000.Rdata"), "decennial_2000.Rdata")
+
+download.file(file.path(base_url, "decennial_2010.Rdata"), "decennial_2010.Rdata")
+
+download.file(file.path(base_url, "decennial_2020.Rdata"), "decennial_2020.Rdata")
+```
+
+```{r}
+race_levels <- c("Black", "White", "Hispanic", "Asian", "Two or more races",
+                 "American Indian", "Pacific Islander", "Some Other Race")
+
+load("decennial_2000.Rdata")
+
+load("decennial_2010.Rdata")
+
+load("decennial_2020.Rdata")
+
+load("acs1yr_2023.Rdata")
+
+census <-
+  bind_rows(
+    `2000` = as_tibble(subdiv_2000_detail),
+    `2010` = as_tibble(subdiv_2010_detail),
+    `2020` = as_tibble(subdiv_2020_detail),
+    `2023` = as_tibble(subdiv_2023_detail),
+    .id = "yr"
+  ) |> 
+  filter(var_group == "Race/ethnicity") |>
+  select(-c(GEOID, var_group)) |>
+  mutate(
+    yr = as.integer(yr),
+    var_detail = if_else(var_detail == "Other", "Some Other Race", var_detail),
+    var_detail = factor(var_detail, levels = race_levels)
+  )
+```
+
+The 2020 census revealed that Cleveland's population contracted another 6% since 2010. It's down `r percent(1 - 372624/478403, 1)` since 2000. The surrounding population in Cuyahoga County dropped from 2000 to 2010, but recovered somewhat over the next decade. Despite Cleveland's struggle, its downtown core has been growing. In fact, it doubled from about 6,300 in 2000 to over 13,000 in 2020. You can see maps and other details on my [GitHub page](https://mpfoley73.github.io/playground/census/census.html). What is particularly striking to me is how the region's racial/ethnic composition has changed. Cleveland's population loss is from its black and white residents. Hispanic and Asian populations have actually _increased_ a great deal. Check out this summary table. The 2023 values are from the 2023 American Community Survey one-year estimate.
+
+```{r}
+census |>
+  # filter(var_group %in% c("Race/ethnicity")) |>
+  mutate(geo_name = if_else(geo_name == "Cleveland", geo_name, "Other Parts of Cuyahoga County")) |>
+  summarize(.by = c(yr, geo_name, var_detail), value = sum(value)) |>
+  mutate(.by = c(yr, geo_name), pct = value / sum(value)) |>
+  pivot_wider(names_from = yr, values_from = c(value, pct)) |>
+  select(geo_name, var_detail, ends_with("2000"), ends_with("2010"), ends_with("2020"), 
+         ends_with("2023")) |>
+  mutate(across(starts_with("pct"), \(x) percent(x, 1))) |>
+  janitor::adorn_totals(where = "row", fill = "", na.rm = TRUE, name = "County Total",
+                        starts_with("value")) |>
+  mutate(
+    var_detail = factor(var_detail, levels = race_levels),
+    geo_name = factor(geo_name, levels = c("Cleveland", "Other Parts of Cuyahoga County", "County Total"))
+  ) |>
+  arrange(geo_name, var_detail) |>
+  group_by(geo_name) |>
+  gt::gt() |>
+  gt::fmt_number(starts_with("value"), decimals = 0) |>
+  gt::sub_missing(missing_text = "Total") |>
+  gt::cols_label(
+    var_detail = "",
+    value_2000 = "2000", value_2010 = "2010", value_2020 = "2020", value_2023 = "2023",
+    pct_2000 = "", pct_2010 = "", pct_2020 = "", pct_2023 = ""
+  ) |>
+  gt::cols_align("left", var_detail) |>
+  gt::tab_style(cell_borders("right", "gray80"), cells_body(columns = c(2, 4, 6, 8))) |>
+  gt::tab_style(gt::cell_fill("honeydew2"), cells_row_groups()) |>
+  gt::tab_header("Cuyahoga Race/ethnicity Population Change") |>
+  gt::tab_options(heading.align = "left")
+```
+
+Cleveland's black population declines in each census. The white population does too, although the 2023 estimate shows it recovering. The Hispanic and Asian populations, on the other hand, have been increasing. The surrounding area is similar with one exception: outside Cleveland the black population has been _increasing_. You can see this on a map.
+
+```{r}
+p <-
+  census |>
+  filter(yr != 2010) |>
+  summarize(.by = c(yr, geo_name, var_detail), pop = sum(value)) |>
+  mutate(.by = c(yr, geo_name), pct = pop / sum(pop)) |>
+  pivot_wider(names_from = yr, values_from = c(pop, pct)) |>
+  mutate(
+    pop_chg = pop_2020 - pop_2000,
+    pct_chg = pct_2020 - pct_2000,
+    tt = glue(
+      "{geo_name} {var_detail} Population\n\n",
+      "2000: {comma(pop_2000)} ({percent(pct_2000, 1)})\n",
+      "2020: {comma(pop_2020)} ({percent(pct_2020, 1)})\n",
+      "Change: {if_else(pop_chg>0,'+','')}{comma(pop_chg)} ({if_else(pop_chg>0,'+','')}{percent(pct_chg, 1)})"
+    )
+  ) |>
+  inner_join(subdiv_2020 |> select(geo_name, geometry) |> unique(), by = "geo_name") |>
+  ggplot() +
+  geom_sf_interactive(aes(geometry = geometry, fill = pct_chg, tooltip = tt), show.legend = FALSE) +
+  facet_wrap(vars(var_detail)) +
+  scale_fill_gradient2(low = "firebrick", mid = "white", high = "dodgerblue", midpoint = 0) +
+  labs(
+    title = "Cuyahoga's changing racial/ethnic composition, 2000 - 2020.",
+    subtitle = "Shaded by change in representation (percentage points)."
+  ) +
+  theme(
+    axis.text = element_blank()
+  )
+
+girafe(ggobj = p)
+```
+
+The first panel shows how the black population has shrunk in Cleveland, but increased in the eastern suburbs. Those same suburbs have experienced population loss from whites. In fact, the white population has been flat are falling almost everywhere in Cuyahoga County. The Hispanic and Asian populations have increased throughout the region. It's not easy to see from the map, but the "two or more races" and "some other race" groups have also increased. Here's a trend chart from the four censuses. I put the non- black, white, and Hispanic groups on a separate plot to expand their vertical scale.
+
+```{r}
+p <-
+  census |>
+  summarize(.by = c(yr, var_detail), value = sum(value)) |>
+  mutate(
+    .by = yr, 
+    pct = value / sum(value),
+    tt = glue("{var_detail}, {yr}\n\n",
+              "Population: {percent(pct, 1)} ({comma(value)})")
+  ) |>
+  mutate(grp = if_else(
+    var_detail %in% c("White", "Black", "Hispanic"), "Black, white, and Hispanic", "Other race/ethnicities"
+  )) |>
+  ggplot(aes(x = yr, y = pct)) +
+  geom_line(aes(color = var_detail)) +
+  geom_point_interactive(aes(color = var_detail, tooltip = tt)) +
+  facet_wrap(vars(grp), scales = "free_y", ncol = 2) +
+  scale_y_continuous(labels = percent_format(1)) +
+  labs(
+    y = "% of population", x = NULL, color = NULL,
+    title = str_wrap(glue(
+      "People are twice as likely to identify as 'two or more races' than a ",
+      "decade ago"
+    ), 90),
+    subtitle = str_wrap(glue(
+      "Cuyahoga County population, 2000-2020."
+    ), 100),
+    caption = "source: 2000, 2010, and 2020 US decennial censuses."
+  ) +
+  theme(legend.position = "top")
+
+girafe(ggobj = p)
+```
+
+The *two or more races* population more than doubled from 21,000 in 2010 to 46,000 in 2020. *Some other race* almost tripled from 2,000 to 5,700. What's going on here? Well, this seems to be a statistical anomaly: the 2020 census provided space for people to write their family origins, and this affected how they were categorized.^[See [this article](https://apnews.com/article/multiracial-2020-census-race-ethnicity-38056ca475f2d3cf26a08aa508cfc9e5?form=MG0AV3) from the Associate Press.] Nationally, the multi-racial population recorded a 276% increase from 2010 to 2020, so Cuyahoga County is not unique.
+
+So the racial/ethnic composition may have changed less than it appears. In Mar 2024, the Census Bureau announced changes to future surveys that will make it easier for people to declare multiple backgrounds.^[See release [here](https://www.census.gov/about/our-research/race-ethnicity/standards-updates.html?form=MG0AV3).] The changes go into effect in 2027.
+
